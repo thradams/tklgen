@@ -1,0 +1,109 @@
+
+module Eval
+{
+    language Eval
+    {
+
+
+        //e3:SE1.Al_1.[5205].Measurements.BreakerPosition.Operator.Value
+
+       token Identifier   =
+        (
+            ('a'..'z' | 'A'..'Z' | '_' | '$') +
+            ('0'..'9' | 'a'..'z' | 'A'..'Z' | '_' | '$')*
+        )
+        ":"
+        (
+            (
+                ('a'..'z' | 'A'..'Z' | '_' | '$') +
+                ('0'..'9' | 'a'..'z' | 'A'..'Z' | '_' | '$')*
+            )
+            |
+            (
+                '[' ('!'..'Z' | '^'..'\u00A0' | '\\')+ ']'
+            )
+        )
+        (
+            '.'
+            (
+                (
+                    ('a'..'z' | 'A'..'Z' | '_' | '$') +
+                    ('0'..'9' | 'a'..'z' | 'A'..'Z' | '_' | '$')*
+                )
+                |
+                (
+                    '[' ('!'..'Z' | '^'..'\u00A0' | '\\')+ ']'
+                )
+            )
+        )*
+        ;
+        token Plus = '+';
+
+        token Minus = '-';
+        token Multi = '*';
+        token Div = '/';
+        token Power = '^';
+        token Open = '(';
+        token Close = ')';
+        token Equal = '=';
+        token GreaterThan  = '>';
+        token LessThan  = '<';
+        token GreaterEqualThan  = '>=';
+        token LessEqualThan  = '<=';
+        token DiferentThan  = '!=';
+        token End = ';';
+        token And = 'and';
+        token Or  = 'or';
+        token EndMark = '\0';
+
+        token Number = ('0'..'9') + ('.' '0'..'9') ? (('E' | 'e')('+' | '-') ? '0'..'9') ?;
+
+
+        interleave Blanks  = (" " | "\n" | "\t" | "\r") +;
+
+        /*
+         C --> D {( ">" | "<" ) D}
+         D --> E {( "and" | "or" ) E}
+         E --> T {( "+" | "-" ) T}
+         T --> F {( "*" | "/" ) F}
+         F --> P ["^" F]
+         P --> v | "(" E ")" | "-" T
+        */
+
+        syntax Main = C EndMark;
+
+
+        syntax C = D C2;
+        syntax C2 = 'and' D {PrintAnd} C2 |
+        'or' D {PrintOr} C2 |
+        empty;
+
+        syntax D = E D2;
+        syntax D2 = '>' E {PrintGreaterThan} D2 |
+        '<' E {PrintLessThan} D2 |
+        '<=' E {PrintLessEqualThan} D2 |
+        '>=' E {PrintGreaterEqualThan} D2 |
+        '=' E {PrintEquals} D2 |
+        '!=' E {PrintNotEqual} D2 |
+        empty;
+
+        syntax E = T E2;
+        syntax E2 = '+' T {PrintPlus} E2 |
+        '-' T {PrintMinus} E2 |
+        empty;
+
+        syntax T = F T2;
+        syntax T2 = '*' F {PrintMulti} T2|
+        '/' F {PrintDiv} T2|
+        empty;
+
+        syntax F = P FOpt;
+        syntax FOpt = '^' F {PrintPower} | empty;
+
+        syntax P = {PrintLexeme} Number |
+        {PrintLexeme} Identifier |
+        '(' E ')' |
+        '-' T {PrintNeg};
+    }
+}
+

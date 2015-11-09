@@ -1,0 +1,37 @@
+
+module Sample3
+{
+  language Sample3
+  {
+
+    token Header1 = "=";
+    token Header2 = "==";
+    token Header3 = "===";
+    token Header4 = "====";
+    token CodeOpen = "{{{";
+    token CodeClose = "{{{";
+    token Line = "----";
+    token OpenLink = "[[";
+    token CloseLink = "[[";
+    token OpenImage = "{{";
+    token CloseImage = "}}";
+    token Asterix = "*";
+    token Italic = "//";
+    token NewLine = "\n";
+    token Spaces = " "+;
+    token Number = '0'..'9'+;
+    token Pontuaction = 
+                '!'..'/'  | '['..'\'' | '{'..'\u00C0';
+                        
+    token Word = ('a'..'Z' | 'A'..'Z')+;
+
+   
+    token EndMark = '\0';
+    interleave Blanks =
+      (" " | "\n" | "\t" | "\r") +;
+
+    syntax Main = 
+      Integer;
+  }
+}
+

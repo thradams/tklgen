@@ -1,0 +1,47 @@
+module PlaygroundModule
+{
+  language PlaygroundLang
+   {
+    token Plus = '+';
+    token Minus = '-';
+    token Multi = '*';
+    token Div = '/';
+    token Power = '^';
+    token Open = '(';
+    token Close = ')';
+    token End = ';';
+    token EndMark = '\0';
+    token Integer   = ('0'..'9')+;
+    token Identifier   = ('a'..'z' | 'A'..'Z' | '_' | '$') +
+                       ('0'..'9' + ('a'..'z' | 'A'..'Z' | '_' | '$') +) ?;
+    
+    interleave Blanks  = (" " | "\n" | "\t" | "\r") +;
+
+    
+    syntax Main = Expressions;
+    syntax Expression = E ';' {PrintNewLine};
+    syntax Expressions = Expression Expressions | empty;
+
+    // E --> T {( "+" | "-" ) T
+    syntax E = T E2;
+    syntax E2 = '+' T {PrintPlus} E2 |
+                '-' T {PrintMinus} E2 |
+                empty;
+
+    // T --> F {( "*" | "/" ) F
+    syntax T = F T2;
+    syntax T2 = '*' F {PrintMulti} T2|
+                '/' F {PrintDiv}T2|
+                empty;
+
+    // F --> P ["^" F
+    syntax F = P FOpt;
+    syntax FOpt = '^' F {PrintPower} | empty;
+
+    // P --> v | "(" E ")" | "-" 
+    syntax P = {PrintLexeme} Integer |
+               {PrintLexeme} Identifier | 
+               '(' E ')' | 
+               '-' T {PrintNeg};
+      }
+}

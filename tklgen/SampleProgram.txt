@@ -1,0 +1,31 @@
+
+#include "stdafx.h"
+#include "GrammarFileParser.h"
+#include <iostream>
+
+int _tmain(int argc, _TCHAR* argv[])
+{
+  if (argc == 1)
+  {
+    std::cout << "missing input file ";
+    return 1;
+  }
+
+  try
+  {
+    Grammar::Context::InputStream ss(argv[1]);
+    Grammar::Context::Scanner scanner(ss);
+    Grammar::Context ctx(scanner);
+    Grammar::Parse_Main(ctx);
+  }
+  catch (const Grammar::ParserException& e)
+  {
+    std::cout << "Error : line, col = " << e.m_Line << ", " << e.m_Col << std::endl;
+  }
+  catch (const std::exception& e)
+  {
+    std::cout << e.what() << std::endl;
+  }
+
+  return 0;
+}

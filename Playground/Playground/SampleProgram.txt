@@ -1,0 +1,30 @@
+
+#include "stdafx.h"
+#include "PlaygroundModuleParser.h"
+#include <iostream>
+
+int _tmain(int argc, _TCHAR* argv[])
+{
+  if (argc == 1)
+  {
+    std::cout << "missing input file ";
+    return 1;
+  }
+
+  try
+  {
+    FileStream ss(argv[1]);
+    PlaygroundModule::Context ctx(ss);
+    PlaygroundModule::Parse_Main(ctx);
+  }
+  catch (const PlaygroundModule::ParserException& e)
+  {
+    std::cout << "Error : line, col = " << e.m_Line << ", " << e.m_Col << std::endl;
+  }
+  catch (const std::exception& e)
+  {
+    std::cout << e.what() << std::endl;
+  }
+
+  return 0;
+}

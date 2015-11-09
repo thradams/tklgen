@@ -1,0 +1,159 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Console">
+      <UniqueIdentifier>{b426efa2-48b7-4278-83d7-7c936390d2ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Data structures">
+      <UniqueIdentifier>{fdda698e-2c64-452b-a183-d43257a0b76b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Algorithms">
+      <UniqueIdentifier>{646e333f-eeff-4e9b-9999-56af6176ece3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Parse grammar">
+      <UniqueIdentifier>{2de159a5-9b61-42b7-a764-89671ca8847e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Output">
+      <UniqueIdentifier>{fc9dcc1f-b759-4d5c-ad9b-97ba81b13fed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Grammar Samples">
+      <UniqueIdentifier>{209734ec-3d18-4fc1-aad4-7ae4b40f95c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Data structures\Common">
+      <UniqueIdentifier>{4a2ca707-2968-4ce9-89d5-67441dddddcc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Data structures\Lex">
+      <UniqueIdentifier>{4d2c2742-24f4-4076-b065-25728a652da5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Data structures\Top Down Parser">
+      <UniqueIdentifier>{222962ca-2fb6-4f99-bd65-2a27179b948e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Output\Lex">
+      <UniqueIdentifier>{f6446c64-577f-4b9c-b487-93d8509afdc5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="targetver.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="console.h">
+      <Filter>Source Files\Console</Filter>
+    </ClInclude>
+    <ClInclude Include="Algorithms.h">
+      <Filter>Source Files\Algorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="GrammarParser.h">
+      <Filter>Source Files\Parse grammar</Filter>
+    </ClInclude>
+    <ClInclude Include="tokenizer.h">
+      <Filter>Source Files\Parse grammar</Filter>
+    </ClInclude>
+    <ClInclude Include="tklgenDFA.h">
+      <Filter>Source Files\Parse grammar</Filter>
+    </ClInclude>
+    <ClInclude Include="FileStream.h">
+      <Filter>Source Files\Parse grammar</Filter>
+    </ClInclude>
+    <ClInclude Include="LexAlgorithms.h">
+      <Filter>Source Files\Algorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="Grammar.h">
+      <Filter>Source Files\Data structures\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Transition.h">
+      <Filter>Source Files\Data structures\Lex</Filter>
+    </ClInclude>
+    <ClInclude Include="SetOfInts.h">
+      <Filter>Source Files\Data structures\Lex</Filter>
+    </ClInclude>
+    <ClInclude Include="expression.h">
+      <Filter>Source Files\Data structures\Lex</Filter>
+    </ClInclude>
+    <ClInclude Include="Production.h">
+      <Filter>Source Files\Data structures\Top Down Parser</Filter>
+    </ClInclude>
+    <ClInclude Include="GrammarSymbol.h">
+      <Filter>Source Files\Data structures\Top Down Parser</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonOutput.h">
+      <Filter>Source Files\Output</Filter>
+    </ClInclude>
+    <ClInclude Include="LexOutputC.h">
+      <Filter>Source Files\Output\Lex</Filter>
+    </ClInclude>
+    <ClInclude Include="LexOutputCpp.h">
+      <Filter>Source Files\Output\Lex</Filter>
+    </ClInclude>
+    <ClInclude Include="LLOutputCpp.h">
+      <Filter>Source Files\Output</Filter>
+    </ClInclude>
+    <ClInclude Include="LLOutputC.h">
+      <Filter>Source Files\Output</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tklgen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="console.cpp">
+      <Filter>Source Files\Console</Filter>
+    </ClCompile>
+    <ClCompile Include="Algorithms.cpp">
+      <Filter>Source Files\Algorithms</Filter>
+    </ClCompile>
+    <ClCompile Include="GrammarParser.cpp">
+      <Filter>Source Files\Parse grammar</Filter>
+    </ClCompile>
+    <ClCompile Include="LexAlgorithms.cpp">
+      <Filter>Source Files\Algorithms</Filter>
+    </ClCompile>
+    <ClCompile Include="Grammar.cpp">
+      <Filter>Source Files\Data structures\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="expression.cpp">
+      <Filter>Source Files\Data structures\Lex</Filter>
+    </ClCompile>
+    <ClCompile Include="Production.cpp">
+      <Filter>Source Files\Data structures\Top Down Parser</Filter>
+    </ClCompile>
+    <ClCompile Include="CommonOutput.cpp">
+      <Filter>Source Files\Output</Filter>
+    </ClCompile>
+    <ClCompile Include="LexOutputC.cpp">
+      <Filter>Source Files\Output\Lex</Filter>
+    </ClCompile>
+    <ClCompile Include="LexOutputCpp.cpp">
+      <Filter>Source Files\Output\Lex</Filter>
+    </ClCompile>
+    <ClCompile Include="LLOutputCpp.cpp">
+      <Filter>Source Files\Output</Filter>
+    </ClCompile>
+    <ClCompile Include="LLOutputC.cpp">
+      <Filter>Source Files\Output</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="grammar.txt">
+      <Filter>Source Files\Parse grammar</Filter>
+    </Text>
+    <Text Include="sample1.txt">
+      <Filter>Source Files\Grammar Samples</Filter>
+    </Text>
+    <Text Include="sample2.txt">
+      <Filter>Source Files\Grammar Samples</Filter>
+    </Text>
+    <Text Include="sample3.txt">
+      <Filter>Source Files\Grammar Samples</Filter>
+    </Text>
+  </ItemGroup>
+</Project>

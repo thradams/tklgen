@@ -1,0 +1,184 @@
+module Sample2
+{
+  language Sample2
+  {   
+    token EndMark = '\0';
+    token EXCLAMATION_MARK = '!';
+    token NUMBER_SIGN = '#';
+    token DOLLAR_SIGN = '$';
+    token PERCENT_SIGN = '%';
+    token AMPERSAND = '&';
+    token APOSTROPHE = '\'';
+    token LEFT_PARENTHESIS = '(';
+    token RIGHT_PARENTHESIS = ')';
+    token ASTERISK = '*';
+    token PLUS_SIGN = '+';
+    token COMMA = ',';
+    token HYPHEN_MINUS = '-';
+    token FULL_STOP = '.';
+    token SOLIDUS = '/';
+    token COLON = ':';
+    token SEMICOLON = ';';
+    token LESS_THAN_SIGN = '<';
+    token EQUALS_SIGN = '=';
+    token GREATER_THAN_SIGN = '>';
+    token QUESTION_MARK = '?';
+    token COMMERCIAL_AT = '@';
+    token LEFT_SQUARE_BRACKET = '[';
+    token REVERSE_SOLIDUS = '\\';
+    token RIGHT_SQUARE_BRACKET = ']';
+    token CIRCUMFLEX_ACCENT = '^';
+    token LOW_LINE = '_';
+    token GRAVE_ACCENT = '`';
+    token LEFT_CURLY_BRACKET = '{';
+    token VERTICAL_LINE = '|';
+    token RIGHT_CURLY_BRACKET = '}';
+
+    token IntegerLiteral   = ('0'..'9')+;
+    token FloatingPointLiteral   = ('0'..'9')+;
+
+    token StringLiteral = '"'(
+
+      (' '..'!' | '#'..'[' | ']'..'\u00FF') |
+
+      ('\\'('"' | '\\' | '/' | 'b' | 'f' | 'n' | 'r' | 't' | ('u'('0'..'9' | 'A'..'F' | 'a'..'f')('0'..'9' | 'A'..'F' | 'a'..'f')('0'..'9' | 'A'..'F' | 'a'..'f')('0'..'9' | 'A'..'F' | 'a'..'f'))))
+
+    ) *;
+
+    token TIf = "if";
+    token Telse = "else";
+    token Tfor = "for";
+    token Twhile = "while";
+    token Treturn = "return";
+    token Tbreak = "break";
+    token Tvar = "var";
+    token Twith = "with";
+    token Tthis = "this";
+    token Ttrue = "true";
+    token Tfalse = "false";
+    token Tnull = "null";
+    token Tcontinue = "continue";
+    token Tfunction = "function";
+    token Tand = "&&";
+    token Tor = "||";
+    token Tnew = "new";
+    token Tdelete = "delete";
+    token Tin = "in";
+    token Teqeq = "==";
+    token Tshift = ">>";
+    token Tinc = "++";
+    
+
+    token Identifier   = ('a'..'z' | 'A'..'Z' | '_' | '$') +
+    ('0'..'9' + ('a'..'z' | 'A'..'Z' | '_' | '$') +) ?;
+
+
+
+   interleave Blanks                  = ((" " | "\n" | "\t" | "\r") +) |
+                                             ("//"(' '..'~') * ("\n" | "\r\n")) |
+                                             ("/*"(((' '..')' | '+'..'~' | "\n" | "\r" | "\t")) |
+                                             ("*"(' '..'.' | '0'..'~' | "\n" | "\r" | "\t")))* "*/");
+
+
+    syntax Main = Program;
+    syntax Program =  empty | Element Program;
+    
+    syntax Element =
+    "function" Identifier '(' ParameterListOpt ')' CompoundStatement |
+    Statement;
+
+    syntax ParameterListOpt = empty | ParameterList;
+
+    syntax ParameterListFollow = ',' ParameterList | empty;
+
+    syntax ParameterList = Identifier ParameterListFollow | empty;
+   
+    syntax CompoundStatement = '{' Statements '}';
+
+    syntax Statements =  empty | Statement Statements;
+
+    syntax Statement =
+    ';' |
+    "if" Condition Statement |
+    "if" Condition Statement "else" Statement |
+    "while" Condition Statement |
+    ForParen ';' ExpressionOpt ';' ExpressionOpt ')' Statement |
+    ForBegin ';' ExpressionOpt ';' ExpressionOpt ')' Statement |
+    ForBegin "in" Expression ')' Statement |
+    "break" ';' |
+    "continue" ';' |
+    "with" '(' Expression ')' Statement |
+    "return" ExpressionOpt ';' |
+    CompoundStatement |
+    VariablesOrExpression ;
+
+    syntax Condition = '(' Expression ')';
+
+    syntax ForParen =   "for" '(' ;
+
+    syntax ForBegin =   ForParen VariablesOrExpression;
+
+    syntax VariablesOrExpression =  "var" Variables |   Expression;
+
+    syntax Variables =  Variable |  Variable ',' Variables;
+
+    syntax Variable = Identifier VariableMore;
+    syntax VariableMore = '=' AssignExpr | empty;
+
+    syntax ExpressionOpt =   empty | Expression;
+
+    syntax Expression =   AssignExpr;
+    
+
+    syntax AssignExpr   = AddExpr AssignExprMore;
+    syntax AssignExprMore = '=' AddExpr {PrintSet} AssignExprMore | empty;
+
+    syntax AddExpr   = MultiExpr AddExprMore;
+
+    syntax AddExprMore = "+" MultiExpr {PrintAdd} AddExprMore |
+                         "-" MultiExpr {PrintMinus} AddExprMore |  
+                         empty;
+                
+
+  syntax MultiExpr = PrimaryExpr MultiExprMore;
+  syntax MultiExprMore =  "*" PrimaryExpr {PrintMulti} MultiExprMore |
+                          "/" PrimaryExpr {PrintDiv} MultiExprMore |
+                          empty;
+
+  syntax PrimaryExpr = PrimaryExpression | "(" AddExpr ")" | "-" MultiExpr;
+
+
+    syntax Constructor =
+    "this" '.' ConstructorCall |
+    ConstructorCall;
+
+    syntax ConstructorCall =
+    Identifier |
+    Identifier '(' ArgumentListOpt ')' |
+    Identifier '.' ConstructorCall;
+
+    syntax MemberExpression =
+    PrimaryExpression |
+    PrimaryExpression '.' MemberExpression |
+    PrimaryExpression '[' Expression ']' |
+    PrimaryExpression '(' ArgumentListOpt ')';
+
+    syntax ArgumentListOpt =
+    empty |
+    ArgumentList;
+
+    syntax ArgumentList =   AssignExpr |
+                            AssignExpr ',' ArgumentList;
+
+    syntax PrimaryExpression =
+    '(' Expression ')' |
+    {PrintLexeme} Identifier |
+    {PrintLexeme}IntegerLiteral |
+    {PrintLexeme} FloatingPointLiteral |
+    {PrintLexeme} StringLiteral |
+    {PrintLexeme} "false" |
+    {PrintLexeme} "true" |
+    {PrintLexeme} "null" |
+    {PrintLexeme} "this";
+  }
+}
