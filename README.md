@@ -80,7 +80,7 @@ The or "|" symbol is used to declare multiple productions.
 
 A complete sample is the tklgen grammar used to describe itself:
 
-[[tklgengrammar2.htm|TKLGEN Grammar]]
+[TKLGEN Grammar](tklgengrammar2.md)
 
 
 ###Parser components:
