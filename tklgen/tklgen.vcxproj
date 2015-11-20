@@ -78,7 +78,8 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(LocalDebuggerCommand) "C:\Users\Thiago\Downloads\Playground-master\Playground-master\Playground\tklgen.exe"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
