@@ -28,7 +28,7 @@ static std::wostream& PrintProduction(std::wostream& os,
     if (actionIndex >= 0)
     {
         //os << tabs << L"ctx->actions->" << g.GetActionName(actionIndex) << L"(ctx);\n";
-        os << tabs << L"IFER(ctx->on_action(" << g.GetActionName(actionIndex) << L", ctx));\n";
+        os << tabs << L"_CHECK "<< g.GetLanguageName() << L"_OnAction(ctx," << g.GetActionName(actionIndex) << L");\n";
     }
 
     actionIndexAtProduction++;
@@ -41,7 +41,7 @@ static std::wostream& PrintProduction(std::wostream& os,
         {
             if (pS != g.epsilon())
             {
-                os << tabs << L"IFER(Match(ctx, " << tokenprefix << production.GetRightSymbol(i)->GetName() << L"));\n";
+                os << tabs << L"_CHECK " << g.GetLanguageName() << L"_Match(ctx, " << tokenprefix << production.GetRightSymbol(i)->GetName() << L");\n";
                 numberOfItems++;
             }
             else
@@ -51,7 +51,7 @@ static std::wostream& PrintProduction(std::wostream& os,
         }
         else
         {
-            os << tabs << L"IFER(Parse_" << production.GetRightSymbol(i)->GetName() << L"(ctx));\n";
+            os << tabs << L"_CHECK Parse_" << production.GetRightSymbol(i)->GetName() << L"(ctx);\n";
             numberOfItems++;
         }
 
@@ -61,7 +61,7 @@ static std::wostream& PrintProduction(std::wostream& os,
         {
             //os << tabs << L"IFER(ctx->actions->" << g.GetActionName(actionIndex) << L"(ctx));\n";
             //os << tabs << L"IFER(" << g.GetActionName(actionIndex) << L"(ctx));\n";
-            os << tabs << L"IFER(ctx->on_action(" << g.GetActionName(actionIndex) << L", ctx));\n";
+            os << tabs << L"_CHECK "<< g.GetLanguageName() << L"_OnAction(ctx," << g.GetActionName(actionIndex) << L");\n";
         }
 
         actionIndexAtProduction++;
@@ -73,13 +73,13 @@ static std::wostream& PrintProduction(std::wostream& os,
     {
         //os << tabs << L"IFER(ctx->actions->" << g.GetActionName(actionIndex) << L"(ctx));\n";
         //os << tabs << L"IFER(" << g.GetActionName(actionIndex) << L"(ctx));\n";
-        os << tabs << L"IFER(ctx->on_action(" << g.GetActionName(actionIndex) << L", ctx));\n";
+        os << tabs << L"_CHECK " << g.GetLanguageName() << L"_OnAction(ctx," << g.GetActionName(actionIndex) << L");\n";
 
     }
 
     if (numberOfItems == 0)
     {
-        os << tabs << L"return ResultCodeEmpty; /*opt*/\n";
+        os << tabs << L"return RESULT_EMPTY; /*opt*/\n";
     }
     return os;
 }
@@ -98,7 +98,7 @@ static std::wostream& PrintFowardDeclarations(std::wostream& os, Grammar& g, MMa
         {
             //mudou
             currentRuleIndex = it->m_pNotTerminal->GetIndex();
-            os << L"ResultCode Parse_" << it->m_pNotTerminal->GetName() << L"( " << g.GetLanguageName() << L"_Context* ctx);\n";
+            os << L"Result Parse_" << it->m_pNotTerminal->GetName() << L"( " << g.GetLanguageName() << L"_Context* ctx);\n";
             sub = 0;
         }
 
@@ -132,7 +132,7 @@ static void PrintActions(std::wostream& os, Grammar& g, bool virt)
     os << L"};\n";
 #else
 
-    os << L"enum " << g.GetLanguageName() << L"_Actions\n";
+    os << L"typedef enum \n";
     os << L"{\n";
 
     for (int i = 0; i < g.GetNumberOfActions(); i++)
@@ -140,7 +140,7 @@ static void PrintActions(std::wostream& os, Grammar& g, bool virt)
         os << L"  " << g.GetActionName(i) << L",\n";
     }
     os << L"  OnError\n";
-    os << L"};\n";
+    os << L"}" << g.GetLanguageName() << L"_Actions;\n";
 
 
 #endif
@@ -151,19 +151,19 @@ static void PrintActionsNames(std::wostream& os, Grammar& g, bool virt)
 {
     os << L"//\n";
 
-    os << L"const wchar_t* " << g.GetLanguageName() << L"_Actions_Text(";
+    os << L"const char* " << g.GetLanguageName() << L"_Actions_Text(";
 
-    os << L"enum " << g.GetLanguageName() << L"_Actions e)\n";
+    os << L"" << g.GetLanguageName() << L"_Actions e)\n";
 
     os << L"{\n";
     os << L"    switch(e)\n";
     os << L"    {\n";
     for (int i = 0; i < g.GetNumberOfActions(); i++)
     {
-        os << L"        case  " << g.GetActionName(i) << L": return L\"" << g.GetActionName(i) << L"\";\n";
+        os << L"        case  " << g.GetActionName(i) << L": return \"" << g.GetActionName(i) << L"\";\n";
     }
     os << L"    }\n";
-    os << L"    return L\"\";\n";
+    os << L"    return \"\";\n";
     os << L"};\n";
 
 
@@ -172,25 +172,10 @@ static void PrintActionsNames(std::wostream& os, Grammar& g, bool virt)
     L"\n"\
     L"{ACTIONS}"\
     L"\n"\
-    L"const wchar_t* {GRAMMAR}_Actions_Text(enum {GRAMMAR}_Actions e);\n"\
-    L"typedef int (*{GRAMMAR}_OnAction)(enum {GRAMMAR}_Actions a, struct {GRAMMAR}_ContextT* ctx);\n"\
+    L"Result {GRAMMAR}_Parse({GRAMMAR}_Context* ctx);\n"\
+    L"const char* {GRAMMAR}_Actions_Text({GRAMMAR}_Actions e);\n"\
     L"\n"\
-    L"#define LEXEME_MAX 400\n"\
-    L"\n"\
-    L"typedef struct {GRAMMAR}_ContextT\n"\
-    L"{\n"\
-    L"    wchar_t* lexeme;\n"\
-    L"    int lexemeSize;\n"\
-    L"    enum {GRAMMAR}_Tokens token;\n"\
-L"    struct sstream* stream;\n"\
-L"    {GRAMMAR}_OnAction   on_action;\n"\
-L"} {GRAMMAR}_Context;\n"\
-L"\n"\
-L"\n"\
-L"int {GRAMMAR}_Parse(struct sstream* ss, {GRAMMAR}_OnAction action, void* context);\n"\
-L"int {GRAMMAR}_Parse_Str(const wchar_t* text, {GRAMMAR}_OnAction action, void* context);\n"\
-L"\n"\
-L"\n"
+    L"\n"
 
 
 static void PrintOutputInterface(std::wostream& os, Grammar& g)
@@ -209,6 +194,9 @@ static void PrintOutputInterface(std::wostream& os, Grammar& g)
 
     find_replace(ws, L"{DATE}", __WDATE__);
     find_replace(ws, L"{GRAMMAR}", g.GetLanguageName());
+
+    os << L"#include \"Result.h\"\n";
+    os << L"#include " << "\"" << g.GetLanguageName() << ".h\"\n";
 
     std::wostringstream ss;
 
@@ -267,133 +255,16 @@ void GenerateDescRecHeaderC(std::wostream& os,
 
 #define SourceCode \
 L"\n"\
-L"#include <assert.h>\n"\
 L"\n"\
-L"#include <stdlib.h>\n"\
-L"#include <stdio.h>\n"\
-L"#include <wchar.h>\n"\
-L"#include <stdbool.h>\n"\
-L"#include \"errors.h\"\n"\
 L"\n"\
-L"inline bool IsError(ResultCode e)\n"\
+L"#define _CHECK if (result == RESULT_OK || result == RESULT_EMPTY) result = \n"\
+L"\n"\
+L"Result {GRAMMAR}_Parse({GRAMMAR}_Context* ctx)\n"\
 L"{\n"\
-L"    if ((e != ResultCodeSuccess &&\n"\
-L"    e != ResultCodeEmpty))\n"\
-L"    {\n"\
-L"        return true;\n"\
-L"    }\n"\
-L"\n"\
-L"    return false;\n"\
+L"  return Parse_Main(ctx);\n" \
 L"}\n"\
 L"\n"\
-L"#define IFER(x) if (IsError(x)) return ResultCodeError;\n"\
-L"\n"\
-L"static ResultCode resize_lexeme({GRAMMAR}_Context* p, size_t sz)\n"\
-L"{\n"\
-L"    wchar_t *newlexeme = (wchar_t*)malloc(sizeof(wchar_t) * sz);\n"\
-L"    if (newlexeme == NULL)\n"\
-L"    {\n"\
-L"        return ResultCodeOutOfMem;\n"\
-L"    }\n"\
-L"\n"\
-L"    if (p->lexeme)\n"\
-L"    {\n"\
-L"        free(p->lexeme);\n"\
-L"        p->lexemeSize = 0;\n"\
-L"    }\n"\
-L"\n"\
-L"    p->lexeme = newlexeme;\n"\
-L"    p->lexemeSize = sz;\n"\
-L"    p->lexeme[0] = L'\\0';\n"\
-L"\n"\
-L"    return ResultCodeSuccess;\n"\
-L"}\n"\
-L"\n"\
-L"static ResultCode {GRAMMAR}_Context_Init({GRAMMAR}_Context* p, int initialLexemeSize)\n"\
-L"{\n"\
-L"    p->lexemeSize = 0;\n"\
-L"    p->lexeme = 0;\n"\
-L"\n"\
-L"    ResultCode r = resize_lexeme(p, initialLexemeSize);\n"\
-L"    if (r == ResultCodeSuccess)\n"\
-L"    {\n"\
-L"        p->lexeme[0] = L'\\0';\n"\
-L"        p->stream = 0;\n"\
-L"        p->token = (enum {GRAMMAR}_Tokens) 0;\n"\
-L"    }\n"\
-L"    \n"\
-L"    return r;\n"\
-L"}\n"\
-L"\n"\
-L"static void {GRAMMAR}_Context_destroy({GRAMMAR}_Context* p)\n"\
-L"{\n"\
-L"    p->lexemeSize = 0;\n"\
-L"    free(p->lexeme);\n"\
-L"}\n"\
-L"\n"\
-L"static ResultCode ReadNextToken({GRAMMAR}_Context* context)\n"\
-L"{\n"\
-L"    return {GRAMMAR}_NextToken(context->stream,\n"\
-L"                          &context->lexeme,\n"\
-L"                          &context->lexemeSize,\n"\
-L"                          &context->token);\n"\
-L"}\n"\
-L"\n"\
-L"static ResultCode Match({GRAMMAR}_Context* context, enum {GRAMMAR}_Tokens tk)\n"\
-L"{\n"\
-L"    if (tk != context->token)\n"\
-L"    {\n"\
-L"        return ResultCodeUnexpectedToken;\n"\
-L"    }\n"\
-L"\n"\
-L"    ResultCode r = ReadNextToken(context);\n"\
-L"\n"\
-L"    if (r != ResultCodeSuccess &&\n"\
-L"    r != ResultCodeEof)\n"\
-L"    {\n"\
-L"        return r;\n"\
-L"    }\n"\
-L"\n"\
-L"    return ResultCodeSuccess;\n"\
-L"}\n"\
-L"\n"\
-L"ResultCode Parse_Main({GRAMMAR}_Context* ctx);\n"\
-L"ResultCode {GRAMMAR}_Parse(struct sstream* ss,\n"\
-L"                      {GRAMMAR}_OnAction action, void* root)\n"\
-L"{\n"\
-L"    {GRAMMAR}_Context ctx;\n"\
-L"    ResultCode r = {GRAMMAR}_Context_Init(&ctx, 200);\n"\
-L"    if (r == ResultCodeSuccess)\n"\
-L"    {\n"\
-L"        ctx.stream = ss;\n"\
-L"        ctx.on_action = action;\n"\
-L"        r = ReadNextToken(&ctx);\n"\
-L"\n"\
-L"        if (r == ResultCodeSuccess)\n"\
-L"        {\n"\
-L"            r = Parse_Main(&ctx);\n"\
-L"        }\n"\
-L"    }\n"\
-L"\n"\
-L"    {GRAMMAR}_Context_destroy(&ctx);    \n"\
-L"    return r;\n"\
-L"}\n"\
-L"\n"\
-L"ResultCode {GRAMMAR}_Parse_Str(const wchar_t* text,\n"\
-L"                              {GRAMMAR}_OnAction action,\n"\
-L"                              void* root,\n"\
-L"                              int* line,\n"\
-L"                              int* col)\n"\
-L"{\n"\
-L"    struct sstream ss;\n"\
-L"    sstream_init(&ss, text);\n"\
-L"    ResultCode r = {GRAMMAR}_Parse(&ss, action, root);\n"\
-L"    *line = ss.line;\n"\
-L"    *col = ss.col;\n"\
-L"    return r;\n"\
-L"}\n"\
 L"\n"
-
 
 void GenerateDescRecC(std::wostream& os,
     Grammar& g,
@@ -418,21 +289,23 @@ void GenerateDescRecC(std::wostream& os,
     os << L"#include \"" << g.GetModuleName() << parserFileSuffix << L".h\"\n";
     os << L"\n";
     os << L"\n";
-    os << L"#include \"sstream.h\"\n";
-    os << L"#include \"errors.h\"\n";
+    //os << L"#include \"sstream.h\"\n";
+    //os << L"#include \"errors.h\"\n";
     os << L"\n";
     os << L"\n";
     PrintActionsNames(os, g, false);
     //PrintActions(os, g, false);
     os << L"\n";
 
+    
+
+    PrintFowardDeclarations(os, g, map);
+
     std::wstring ws(SourceCode);
     find_replace(ws, L"{GRAMMAR}", g.GetLanguageName());
     find_replace(ws, L"{MODULE}", g.GetLanguageName());
 
     os << ws;
-
-    PrintFowardDeclarations(os, g, map);
 
 
     int i = 0;
@@ -444,10 +317,10 @@ void GenerateDescRecC(std::wostream& os,
     {
         int currentRuleIndex = it->m_pNotTerminal->GetIndex();
         //Faz todos desta regra (até ela mudar)
-        os << L"ResultCode " << "Parse_" << it->m_pNotTerminal->GetName() << L"( " << g.GetLanguageName() + L"_Context* ctx)\n";
+        os << L"Result " << "Parse_" << it->m_pNotTerminal->GetName() << L"( " << g.GetLanguageName() + L"_Context* ctx)\n";
         os << L"{\n";
-
-        os << TAB_1 << L"enum " << g.GetLanguageName() << L"_Tokens token = ctx->token; \n";
+        os << TAB_1 << L"Result result = RESULT_OK;\n";
+        os << TAB_1 << L"" << g.GetLanguageName() << L"_Tokens token = ctx->token; \n";
         os << L"\n";
 
         int sub = 0;
@@ -518,11 +391,11 @@ void GenerateDescRecC(std::wostream& os,
 
         os << TAB_1 << L"else\n";
         os << TAB_1 << L"{\n";
-        os << TAB__2 << L"ctx->on_action(OnError, ctx);\n";
-        os << TAB__2 << L"return ResultCodeError;\n";
+        os << TAB__2 << g.GetLanguageName() << L"_OnAction(ctx, OnError);\n";
+        os << TAB__2 << L"return RESULT_FAIL;\n";
         os << TAB_1 << L"}\n";
         os << L"\n";
-        os << TAB_1 << L"return ResultCodeSuccess;\n";
+        os << TAB_1 << L"return result;\n";
         os << L"}\n\n";
     }
 

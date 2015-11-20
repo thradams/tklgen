@@ -6,26 +6,25 @@
  */
 
 #include "PlaygroundModuleLex.h"
-
-const wchar_t* PlaygroundLang_Tokens_ToString(PlaygroundLang_Tokens e)
+const char* PlaygroundLang_Tokens_ToString(PlaygroundLang_Tokens e)
 {
     switch(e)
     {
-    case TKPlus: return L"Plus";
-    case TKMinus: return L"Minus";
-    case TKMulti: return L"Multi";
-    case TKDiv: return L"Div";
-    case TKPower: return L"Power";
-    case TKOpen: return L"Open";
-    case TKClose: return L"Close";
-    case TKEnd: return L"End";
-    case TKEndMark: return L"EndMark";
-    case TKInteger: return L"Integer";
-    case TKIdentifier: return L"Identifier";
-    case TKBlanks: return L"Blanks";
+    case TKPlus: return "Plus";
+    case TKMinus: return "Minus";
+    case TKMulti: return "Multi";
+    case TKDiv: return "Div";
+    case TKPower: return "Power";
+    case TKOpen: return "Open";
+    case TKClose: return "Close";
+    case TKEnd: return "End";
+    case TKEndMark: return "EndMark";
+    case TKInteger: return "Integer";
+    case TKIdentifier: return "Identifier";
+    case TKBlanks: return "Blanks";
     default:break;
     }
-    return L"";
+    return "";
 }
 
 int PlaygroundLang_GetNext(int state, wchar_t ch)

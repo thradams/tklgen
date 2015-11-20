@@ -12,7 +12,6 @@
 #include "PlaygroundModuleParser.h"
 
 
-#include "Result.h"
 
 
 //
@@ -20,1740 +19,332 @@ const char* PlaygroundLang_Actions_Text(PlaygroundLang_Actions e)
 {
     switch(e)
     {
-        case  FIM: return "FIM";
-        case  outro: return "outro";
-        case  Include: return "Include";
-        case  ifdef_begin: return "ifdef_begin";
-        case  ifdef_end: return "ifdef_end";
-        case  elseif: return "elseif";
-        case  ifndef: return "ifndef";
-        case  define: return "define";
+        case  PrintNewLine: return "PrintNewLine";
+        case  PrintPlus: return "PrintPlus";
+        case  PrintMinus: return "PrintMinus";
+        case  PrintMulti: return "PrintMulti";
+        case  PrintDiv: return "PrintDiv";
+        case  PrintPower: return "PrintPower";
+        case  PrintLexeme: return "PrintLexeme";
+        case  PrintNeg: return "PrintNeg";
     }
     return "";
 };
 
-
-#include <assert.h>
-
-
-#define _CHECK  if (result == RESULT_OK || result == RESULT_EMPTY)
-
 /*forward declarations*/ 
-Result Parse_Define(PlaygroundLang_Context* ctx);
-Result Parse_IfDef(PlaygroundLang_Context* ctx);
-Result Parse_IfNDef(PlaygroundLang_Context* ctx);
-Result Parse_Main(PlaygroundLang_Context* ctx);
-Result Parse_Items(PlaygroundLang_Context* ctx);
-Result Parse_Other(PlaygroundLang_Context* ctx);
-Result Parse_Item(PlaygroundLang_Context* ctx);
-Result Parse_Include(PlaygroundLang_Context* ctx);
-Result Parse_PathPart(PlaygroundLang_Context* ctx);
-Result Parse_FileName(PlaygroundLang_Context* ctx);
-Result Parse_ElseOpt(PlaygroundLang_Context* ctx);
-Result Parse_Path(PlaygroundLang_Context* ctx);
-Result Parse_ArgsOpt(PlaygroundLang_Context* ctx);
-Result Parse_AllToEndOfLine(PlaygroundLang_Context* ctx);
-Result Parse_Undef(PlaygroundLang_Context* ctx);
-Result Parse_ArgumentList(PlaygroundLang_Context* ctx);
-Result Parse_ArgumentListFollow(PlaygroundLang_Context* ctx);
+Result Parse_E( PlaygroundLang_Context* ctx);
+Result Parse_Main( PlaygroundLang_Context* ctx);
+Result Parse_T( PlaygroundLang_Context* ctx);
+Result Parse_F( PlaygroundLang_Context* ctx);
+Result Parse_Expressions( PlaygroundLang_Context* ctx);
+Result Parse_E2( PlaygroundLang_Context* ctx);
+Result Parse_Expression( PlaygroundLang_Context* ctx);
+Result Parse_T2( PlaygroundLang_Context* ctx);
+Result Parse_FOpt( PlaygroundLang_Context* ctx);
+Result Parse_P( PlaygroundLang_Context* ctx);
 
 
-Result Parse_Define(PlaygroundLang_Context* ctx)
+
+
+
+#define _CHECK if (result == RESULT_OK || result == RESULT_EMPTY) result = 
+
+Result PlaygroundLang_Parse(PlaygroundLang_Context* ctx)
+{
+  return Parse_Main(ctx);
+}
+
+
+Result Parse_E( PlaygroundLang_Context* ctx)
 {
     Result result = RESULT_OK;
     PlaygroundLang_Tokens token = ctx->token; 
 
-    if (token == TKPreDefine)
+    if (token == TKMinus ||
+        token == TKOpen ||
+        token == TKInteger ||
+        token == TKIdentifier)
     {
-        /*Define => PreDefine Identifier ArgsOpt AllToEndOfLine */
-        _CHECK result = PlaygroundLang_OnAction(ctx, define);
-        _CHECK result = PlaygroundLang_Match(ctx, TKPreDefine);
-        _CHECK result = PlaygroundLang_Match(ctx, TKIdentifier);
-        _CHECK result = Parse_ArgsOpt(ctx);
-        _CHECK result = Parse_AllToEndOfLine(ctx);
+        /*E => T E2 */
+        _CHECK Parse_T(ctx);
+        _CHECK Parse_E2(ctx);
     }
     else
     {
-        _CHECK result = PlaygroundLang_OnAction(ctx, OnError);
-        result = RESULT_FAIL;
+        PlaygroundLang_OnAction(ctx, OnError);
+        return RESULT_FAIL;
     }
 
     return result;
 }
 
-Result Parse_IfDef(PlaygroundLang_Context* ctx)
+Result Parse_Main( PlaygroundLang_Context* ctx)
 {
     Result result = RESULT_OK;
     PlaygroundLang_Tokens token = ctx->token; 
 
-    if (token == TKPreIfDef)
-    {
-        /*IfDef => PreIfDef Identifier BreakLine Items ElseOpt PreEndif */
-        _CHECK result = PlaygroundLang_OnAction(ctx, ifdef_begin);
-        _CHECK result = PlaygroundLang_Match(ctx, TKPreIfDef);
-        _CHECK result = PlaygroundLang_Match(ctx, TKIdentifier);
-        _CHECK result = PlaygroundLang_Match(ctx, TKBreakLine);
-        _CHECK result = Parse_Items(ctx);
-        _CHECK result = Parse_ElseOpt(ctx);
-        _CHECK result = PlaygroundLang_Match(ctx, TKPreEndif);
-        _CHECK result = PlaygroundLang_OnAction(ctx,ifdef_end);
-    }
-    else
-    {
-        _CHECK result = PlaygroundLang_OnAction(ctx, OnError);
-        result = RESULT_FAIL;
-    }
-
-    return result;
-}
-
-Result Parse_IfNDef(PlaygroundLang_Context* ctx)
-{
-    Result result = RESULT_OK;
-    PlaygroundLang_Tokens token = ctx->token; 
-
-    if (token == TKPreIfNDef)
-    {
-        /*IfNDef => PreIfNDef Identifier BreakLine Items ElseOpt PreEndif */
-        _CHECK result = PlaygroundLang_OnAction(ctx, ifndef);
-        _CHECK result = PlaygroundLang_Match(ctx, TKPreIfNDef);
-        _CHECK result = PlaygroundLang_Match(ctx, TKIdentifier);
-        _CHECK result = PlaygroundLang_Match(ctx, TKBreakLine);
-        _CHECK result = Parse_Items(ctx);
-        _CHECK result = Parse_ElseOpt(ctx);
-        _CHECK result = PlaygroundLang_Match(ctx, TKPreEndif);
-    }
-    else
-    {
-        _CHECK result = PlaygroundLang_OnAction(ctx, OnError);
-        result = RESULT_FAIL;
-    }
-
-    return result;
-}
-
-Result Parse_Main(PlaygroundLang_Context* ctx)
-{
-    Result result = RESULT_OK;
-    PlaygroundLang_Tokens token = ctx->token; 
-
-    if (token == TKPreInclude ||
+    if (token == TKMinus ||
         token == TKEndMark ||
-        token == TKPreDefine ||
-        token == TKSubAssign ||
-        token == TKIncOp ||
-        token == TKAddAssign ||
-        token == TKModAssign ||
-        token == TKAndAssign ||
-        token == TKEllipsis ||
-        token == TKRightAssign ||
-        token == TKDecOp ||
-        token == TKPreIfNDef ||
-        token == TKPreIfDef ||
-        token == TKLeftAssign ||
-        token == TKMultAssign ||
-        token == TKDivAssign ||
-        token == TKXorAssign ||
-        token == TKOrAssign ||
-        token == TKRightOp ||
-        token == TKLeftOp ||
-        token == TKRIGHT_SQUARE_BRACKET ||
-        token == TKLEFT_PARENTHESIS ||
-        token == TKCOLON ||
-        token == TKCIRCUMFLEX_ACCENT ||
-        token == TKFULL_STOP ||
-        token == TKSEMICOLON ||
-        token == TKPLUS_SIGN ||
-        token == TKCOMMA ||
-        token == TKLeOp ||
-        token == TKQUOTATION_MARK ||
-        token == TKAndOp ||
-        token == TKEQUALS_SIGN ||
-        token == TKSOLIDUS ||
-        token == TKAMPERSAND ||
-        token == TKGeOp ||
-        token == TKOrOp ||
-        token == TKEXCLAMATION_MARK ||
-        token == TKRIGHT_PARENTHESIS ||
-        token == TKHYPHEN_MINUS ||
-        token == TKDOLLAR_SIGN ||
-        token == TKLESS_THAN_SIGN ||
-        token == TKQUESTION_MARK ||
-        token == TKPERCENT_SIGN ||
-        token == TKCOMMERCIAL_AT ||
-        token == TKLEFT_SQUARE_BRACKET ||
-        token == TKPtrOp ||
-        token == TKREVERSE_SOLIDUS ||
-        token == TKAPOSTROPHE ||
-        token == TKEqOp ||
-        token == TKGREATER_THAN_SIGN ||
-        token == TKASTERISK ||
-        token == TKNeOp ||
-        token == TKLOW_LINE ||
-        token == TKVERTICAL_LINE ||
-        token == TKCHAR ||
-        token == TKSTRING ||
-        token == TKLINECOMMENT ||
-        token == TKRIGHT_CURLY_BRACKET ||
-        token == TKGRAVE_ACCENT ||
-        token == TKLEFT_CURLY_BRACKET ||
-        token == TKCOMMENT ||
-        token == TKStaticAssert ||
-        token == TKThreadLocal ||
-        token == TKNoReturn ||
-        token == TKComplex ||
-        token == TKFunc ||
-        token == TKImaginary ||
-        token == TKIdentifier ||
-        token == TKGeneric ||
-        token == TKNumber ||
-        token == TKBool ||
-        token == TKReturn ||
-        token == TKAuto ||
-        token == TKInline ||
-        token == TKRegister ||
-        token == TKCase ||
-        token == TKChar ||
-        token == TKContinue ||
-        token == TKDefault ||
-        token == TKDouble ||
-        token == TKBreak ||
-        token == TKBreakLine ||
-        token == TKDo ||
-        token == TKExtern ||
-        token == TKConst ||
-        token == TKFloat ||
-        token == TKLong ||
-        token == TKSigned ||
-        token == TKInt ||
-        token == TKSizeOf ||
-        token == TKStatic ||
-        token == TKStruct ||
-        token == TKSwitch ||
-        token == TKNUMBER ||
-        token == TKElse ||
-        token == TKEnum ||
-        token == TKShort ||
-        token == TKFor ||
-        token == TKGoto ||
-        token == TKIf ||
-        token == TKRestrict ||
-        token == TKUnsigned ||
-        token == TKWhile ||
-        token == TKAlignAs ||
-        token == TKTypedef ||
-        token == TKVoid ||
-        token == TKAlignOf ||
-        token == TKAtomic ||
-        token == TKVolatile ||
-        token == TKUnion)
+        token == TKOpen ||
+        token == TKInteger ||
+        token == TKIdentifier)
     {
-        /*Main => Items */
-        _CHECK result = Parse_Items(ctx);
-        _CHECK result = PlaygroundLang_OnAction(ctx,FIM);
+        /*Main => Expressions */
+        _CHECK Parse_Expressions(ctx);
     }
     else
     {
-        _CHECK result = PlaygroundLang_OnAction(ctx, OnError);
-        result = RESULT_FAIL;
+        PlaygroundLang_OnAction(ctx, OnError);
+        return RESULT_FAIL;
     }
 
     return result;
 }
 
-Result Parse_Items(PlaygroundLang_Context* ctx)
+Result Parse_T( PlaygroundLang_Context* ctx)
 {
     Result result = RESULT_OK;
     PlaygroundLang_Tokens token = ctx->token; 
 
-    if (token == TKPreInclude ||
-        token == TKPreDefine ||
-        token == TKSubAssign ||
-        token == TKIncOp ||
-        token == TKAddAssign ||
-        token == TKModAssign ||
-        token == TKAndAssign ||
-        token == TKEllipsis ||
-        token == TKRightAssign ||
-        token == TKDecOp ||
-        token == TKPreIfNDef ||
-        token == TKPreIfDef ||
-        token == TKLeftAssign ||
-        token == TKMultAssign ||
-        token == TKDivAssign ||
-        token == TKXorAssign ||
-        token == TKOrAssign ||
-        token == TKRightOp ||
-        token == TKLeftOp ||
-        token == TKRIGHT_SQUARE_BRACKET ||
-        token == TKLEFT_PARENTHESIS ||
-        token == TKCOLON ||
-        token == TKCIRCUMFLEX_ACCENT ||
-        token == TKFULL_STOP ||
-        token == TKSEMICOLON ||
-        token == TKPLUS_SIGN ||
-        token == TKCOMMA ||
-        token == TKLeOp ||
-        token == TKQUOTATION_MARK ||
-        token == TKAndOp ||
-        token == TKEQUALS_SIGN ||
-        token == TKSOLIDUS ||
-        token == TKAMPERSAND ||
-        token == TKGeOp ||
-        token == TKOrOp ||
-        token == TKEXCLAMATION_MARK ||
-        token == TKRIGHT_PARENTHESIS ||
-        token == TKHYPHEN_MINUS ||
-        token == TKDOLLAR_SIGN ||
-        token == TKLESS_THAN_SIGN ||
-        token == TKQUESTION_MARK ||
-        token == TKPERCENT_SIGN ||
-        token == TKCOMMERCIAL_AT ||
-        token == TKLEFT_SQUARE_BRACKET ||
-        token == TKPtrOp ||
-        token == TKREVERSE_SOLIDUS ||
-        token == TKAPOSTROPHE ||
-        token == TKEqOp ||
-        token == TKGREATER_THAN_SIGN ||
-        token == TKASTERISK ||
-        token == TKNeOp ||
-        token == TKLOW_LINE ||
-        token == TKVERTICAL_LINE ||
-        token == TKCHAR ||
-        token == TKSTRING ||
-        token == TKLINECOMMENT ||
-        token == TKRIGHT_CURLY_BRACKET ||
-        token == TKGRAVE_ACCENT ||
-        token == TKLEFT_CURLY_BRACKET ||
-        token == TKCOMMENT ||
-        token == TKStaticAssert ||
-        token == TKThreadLocal ||
-        token == TKNoReturn ||
-        token == TKComplex ||
-        token == TKFunc ||
-        token == TKImaginary ||
-        token == TKIdentifier ||
-        token == TKGeneric ||
-        token == TKNumber ||
-        token == TKBool ||
-        token == TKReturn ||
-        token == TKAuto ||
-        token == TKInline ||
-        token == TKRegister ||
-        token == TKCase ||
-        token == TKChar ||
-        token == TKContinue ||
-        token == TKDefault ||
-        token == TKDouble ||
-        token == TKBreak ||
-        token == TKBreakLine ||
-        token == TKDo ||
-        token == TKExtern ||
-        token == TKConst ||
-        token == TKFloat ||
-        token == TKLong ||
-        token == TKSigned ||
-        token == TKInt ||
-        token == TKSizeOf ||
-        token == TKStatic ||
-        token == TKStruct ||
-        token == TKSwitch ||
-        token == TKNUMBER ||
-        token == TKElse ||
-        token == TKEnum ||
-        token == TKShort ||
-        token == TKFor ||
-        token == TKGoto ||
-        token == TKIf ||
-        token == TKRestrict ||
-        token == TKUnsigned ||
-        token == TKWhile ||
-        token == TKAlignAs ||
-        token == TKTypedef ||
-        token == TKVoid ||
-        token == TKAlignOf ||
-        token == TKAtomic ||
-        token == TKVolatile ||
-        token == TKUnion)
+    if (token == TKMinus ||
+        token == TKOpen ||
+        token == TKInteger ||
+        token == TKIdentifier)
     {
-        /*Items => Item Items */
-        _CHECK result = Parse_Item(ctx);
-        _CHECK result = Parse_Items(ctx);
-    }
-    else if (token == TKPreInclude ||
-        token == TKEndMark ||
-        token == TKPreDefine ||
-        token == TKSubAssign ||
-        token == TKIncOp ||
-        token == TKAddAssign ||
-        token == TKModAssign ||
-        token == TKAndAssign ||
-        token == TKEllipsis ||
-        token == TKRightAssign ||
-        token == TKDecOp ||
-        token == TKPreIfNDef ||
-        token == TKPreIfDef ||
-        token == TKPreElse ||
-        token == TKPreEndif ||
-        token == TKLeftAssign ||
-        token == TKMultAssign ||
-        token == TKDivAssign ||
-        token == TKXorAssign ||
-        token == TKOrAssign ||
-        token == TKRightOp ||
-        token == TKLeftOp ||
-        token == TKRIGHT_SQUARE_BRACKET ||
-        token == TKLEFT_PARENTHESIS ||
-        token == TKCOLON ||
-        token == TKCIRCUMFLEX_ACCENT ||
-        token == TKFULL_STOP ||
-        token == TKSEMICOLON ||
-        token == TKPLUS_SIGN ||
-        token == TKCOMMA ||
-        token == TKLeOp ||
-        token == TKQUOTATION_MARK ||
-        token == TKAndOp ||
-        token == TKEQUALS_SIGN ||
-        token == TKSOLIDUS ||
-        token == TKAMPERSAND ||
-        token == TKGeOp ||
-        token == TKOrOp ||
-        token == TKEXCLAMATION_MARK ||
-        token == TKRIGHT_PARENTHESIS ||
-        token == TKHYPHEN_MINUS ||
-        token == TKDOLLAR_SIGN ||
-        token == TKLESS_THAN_SIGN ||
-        token == TKQUESTION_MARK ||
-        token == TKPERCENT_SIGN ||
-        token == TKCOMMERCIAL_AT ||
-        token == TKLEFT_SQUARE_BRACKET ||
-        token == TKPtrOp ||
-        token == TKREVERSE_SOLIDUS ||
-        token == TKAPOSTROPHE ||
-        token == TKEqOp ||
-        token == TKGREATER_THAN_SIGN ||
-        token == TKASTERISK ||
-        token == TKNeOp ||
-        token == TKLOW_LINE ||
-        token == TKVERTICAL_LINE ||
-        token == TKCHAR ||
-        token == TKSTRING ||
-        token == TKLINECOMMENT ||
-        token == TKRIGHT_CURLY_BRACKET ||
-        token == TKGRAVE_ACCENT ||
-        token == TKLEFT_CURLY_BRACKET ||
-        token == TKCOMMENT ||
-        token == TKStaticAssert ||
-        token == TKThreadLocal ||
-        token == TKNoReturn ||
-        token == TKComplex ||
-        token == TKFunc ||
-        token == TKImaginary ||
-        token == TKIdentifier ||
-        token == TKGeneric ||
-        token == TKNumber ||
-        token == TKBool ||
-        token == TKReturn ||
-        token == TKAuto ||
-        token == TKInline ||
-        token == TKRegister ||
-        token == TKCase ||
-        token == TKChar ||
-        token == TKContinue ||
-        token == TKDefault ||
-        token == TKDouble ||
-        token == TKBreak ||
-        token == TKBreakLine ||
-        token == TKDo ||
-        token == TKExtern ||
-        token == TKConst ||
-        token == TKFloat ||
-        token == TKLong ||
-        token == TKSigned ||
-        token == TKInt ||
-        token == TKSizeOf ||
-        token == TKStatic ||
-        token == TKStruct ||
-        token == TKSwitch ||
-        token == TKNUMBER ||
-        token == TKElse ||
-        token == TKEnum ||
-        token == TKShort ||
-        token == TKFor ||
-        token == TKGoto ||
-        token == TKIf ||
-        token == TKRestrict ||
-        token == TKUnsigned ||
-        token == TKWhile ||
-        token == TKAlignAs ||
-        token == TKTypedef ||
-        token == TKVoid ||
-        token == TKAlignOf ||
-        token == TKAtomic ||
-        token == TKVolatile ||
-        token == TKUnion)
-    {
-        /*Items => Epsilon */
-        result = RESULT_EMPTY; /*opt*/
+        /*T => F T2 */
+        _CHECK Parse_F(ctx);
+        _CHECK Parse_T2(ctx);
     }
     else
     {
-        _CHECK result = PlaygroundLang_OnAction(ctx, OnError);
-        result = RESULT_FAIL;
+        PlaygroundLang_OnAction(ctx, OnError);
+        return RESULT_FAIL;
     }
 
     return result;
 }
 
-Result Parse_Other(PlaygroundLang_Context* ctx)
+Result Parse_F( PlaygroundLang_Context* ctx)
 {
     Result result = RESULT_OK;
     PlaygroundLang_Tokens token = ctx->token; 
 
-    if (token == TKEllipsis)
-    {
-        /*Other => Ellipsis */
-        _CHECK result = PlaygroundLang_Match(ctx, TKEllipsis);
-    }
-    else if (token == TKRightAssign)
-    {
-        /*Other => RightAssign */
-        _CHECK result = PlaygroundLang_Match(ctx, TKRightAssign);
-    }
-    else if (token == TKLeftAssign)
-    {
-        /*Other => LeftAssign */
-        _CHECK result = PlaygroundLang_Match(ctx, TKLeftAssign);
-    }
-    else if (token == TKAddAssign)
-    {
-        /*Other => AddAssign */
-        _CHECK result = PlaygroundLang_Match(ctx, TKAddAssign);
-    }
-    else if (token == TKSubAssign)
-    {
-        /*Other => SubAssign */
-        _CHECK result = PlaygroundLang_Match(ctx, TKSubAssign);
-    }
-    else if (token == TKMultAssign)
-    {
-        /*Other => MultAssign */
-        _CHECK result = PlaygroundLang_Match(ctx, TKMultAssign);
-    }
-    else if (token == TKDivAssign)
-    {
-        /*Other => DivAssign */
-        _CHECK result = PlaygroundLang_Match(ctx, TKDivAssign);
-    }
-    else if (token == TKModAssign)
-    {
-        /*Other => ModAssign */
-        _CHECK result = PlaygroundLang_Match(ctx, TKModAssign);
-    }
-    else if (token == TKAndAssign)
-    {
-        /*Other => AndAssign */
-        _CHECK result = PlaygroundLang_Match(ctx, TKAndAssign);
-    }
-    else if (token == TKXorAssign)
-    {
-        /*Other => XorAssign */
-        _CHECK result = PlaygroundLang_Match(ctx, TKXorAssign);
-    }
-    else if (token == TKOrAssign)
-    {
-        /*Other => OrAssign */
-        _CHECK result = PlaygroundLang_Match(ctx, TKOrAssign);
-    }
-    else if (token == TKRightOp)
-    {
-        /*Other => RightOp */
-        _CHECK result = PlaygroundLang_Match(ctx, TKRightOp);
-    }
-    else if (token == TKLeftOp)
-    {
-        /*Other => LeftOp */
-        _CHECK result = PlaygroundLang_Match(ctx, TKLeftOp);
-    }
-    else if (token == TKIncOp)
-    {
-        /*Other => IncOp */
-        _CHECK result = PlaygroundLang_Match(ctx, TKIncOp);
-    }
-    else if (token == TKDecOp)
-    {
-        /*Other => DecOp */
-        _CHECK result = PlaygroundLang_Match(ctx, TKDecOp);
-    }
-    else if (token == TKPtrOp)
-    {
-        /*Other => PtrOp */
-        _CHECK result = PlaygroundLang_Match(ctx, TKPtrOp);
-    }
-    else if (token == TKAndOp)
-    {
-        /*Other => AndOp */
-        _CHECK result = PlaygroundLang_Match(ctx, TKAndOp);
-    }
-    else if (token == TKOrOp)
-    {
-        /*Other => OrOp */
-        _CHECK result = PlaygroundLang_Match(ctx, TKOrOp);
-    }
-    else if (token == TKLeOp)
-    {
-        /*Other => LeOp */
-        _CHECK result = PlaygroundLang_Match(ctx, TKLeOp);
-    }
-    else if (token == TKGeOp)
-    {
-        /*Other => GeOp */
-        _CHECK result = PlaygroundLang_Match(ctx, TKGeOp);
-    }
-    else if (token == TKEqOp)
-    {
-        /*Other => EqOp */
-        _CHECK result = PlaygroundLang_Match(ctx, TKEqOp);
-    }
-    else if (token == TKNeOp)
-    {
-        /*Other => NeOp */
-        _CHECK result = PlaygroundLang_Match(ctx, TKNeOp);
-    }
-    else if (token == TKEXCLAMATION_MARK)
-    {
-        /*Other => EXCLAMATION_MARK */
-        _CHECK result = PlaygroundLang_Match(ctx, TKEXCLAMATION_MARK);
-    }
-    else if (token == TKQUOTATION_MARK)
-    {
-        /*Other => QUOTATION_MARK */
-        _CHECK result = PlaygroundLang_Match(ctx, TKQUOTATION_MARK);
-    }
-    else if (token == TKDOLLAR_SIGN)
-    {
-        /*Other => DOLLAR_SIGN */
-        _CHECK result = PlaygroundLang_Match(ctx, TKDOLLAR_SIGN);
-    }
-    else if (token == TKPERCENT_SIGN)
-    {
-        /*Other => PERCENT_SIGN */
-        _CHECK result = PlaygroundLang_Match(ctx, TKPERCENT_SIGN);
-    }
-    else if (token == TKAMPERSAND)
-    {
-        /*Other => AMPERSAND */
-        _CHECK result = PlaygroundLang_Match(ctx, TKAMPERSAND);
-    }
-    else if (token == TKAPOSTROPHE)
-    {
-        /*Other => APOSTROPHE */
-        _CHECK result = PlaygroundLang_Match(ctx, TKAPOSTROPHE);
-    }
-    else if (token == TKLEFT_PARENTHESIS)
-    {
-        /*Other => LEFT_PARENTHESIS */
-        _CHECK result = PlaygroundLang_Match(ctx, TKLEFT_PARENTHESIS);
-    }
-    else if (token == TKRIGHT_PARENTHESIS)
-    {
-        /*Other => RIGHT_PARENTHESIS */
-        _CHECK result = PlaygroundLang_Match(ctx, TKRIGHT_PARENTHESIS);
-    }
-    else if (token == TKASTERISK)
-    {
-        /*Other => ASTERISK */
-        _CHECK result = PlaygroundLang_Match(ctx, TKASTERISK);
-    }
-    else if (token == TKPLUS_SIGN)
-    {
-        /*Other => PLUS_SIGN */
-        _CHECK result = PlaygroundLang_Match(ctx, TKPLUS_SIGN);
-    }
-    else if (token == TKCOMMA)
-    {
-        /*Other => COMMA */
-        _CHECK result = PlaygroundLang_Match(ctx, TKCOMMA);
-    }
-    else if (token == TKHYPHEN_MINUS)
-    {
-        /*Other => HYPHEN_MINUS */
-        _CHECK result = PlaygroundLang_Match(ctx, TKHYPHEN_MINUS);
-    }
-    else if (token == TKFULL_STOP)
-    {
-        /*Other => FULL_STOP */
-        _CHECK result = PlaygroundLang_Match(ctx, TKFULL_STOP);
-    }
-    else if (token == TKSOLIDUS)
-    {
-        /*Other => SOLIDUS */
-        _CHECK result = PlaygroundLang_Match(ctx, TKSOLIDUS);
-    }
-    else if (token == TKCOLON)
-    {
-        /*Other => COLON */
-        _CHECK result = PlaygroundLang_Match(ctx, TKCOLON);
-    }
-    else if (token == TKSEMICOLON)
-    {
-        /*Other => SEMICOLON */
-        _CHECK result = PlaygroundLang_Match(ctx, TKSEMICOLON);
-    }
-    else if (token == TKLESS_THAN_SIGN)
-    {
-        /*Other => LESS_THAN_SIGN */
-        _CHECK result = PlaygroundLang_Match(ctx, TKLESS_THAN_SIGN);
-    }
-    else if (token == TKEQUALS_SIGN)
-    {
-        /*Other => EQUALS_SIGN */
-        _CHECK result = PlaygroundLang_Match(ctx, TKEQUALS_SIGN);
-    }
-    else if (token == TKGREATER_THAN_SIGN)
-    {
-        /*Other => GREATER_THAN_SIGN */
-        _CHECK result = PlaygroundLang_Match(ctx, TKGREATER_THAN_SIGN);
-    }
-    else if (token == TKQUESTION_MARK)
-    {
-        /*Other => QUESTION_MARK */
-        _CHECK result = PlaygroundLang_Match(ctx, TKQUESTION_MARK);
-    }
-    else if (token == TKCOMMERCIAL_AT)
-    {
-        /*Other => COMMERCIAL_AT */
-        _CHECK result = PlaygroundLang_Match(ctx, TKCOMMERCIAL_AT);
-    }
-    else if (token == TKLEFT_SQUARE_BRACKET)
-    {
-        /*Other => LEFT_SQUARE_BRACKET */
-        _CHECK result = PlaygroundLang_Match(ctx, TKLEFT_SQUARE_BRACKET);
-    }
-    else if (token == TKREVERSE_SOLIDUS)
-    {
-        /*Other => REVERSE_SOLIDUS */
-        _CHECK result = PlaygroundLang_Match(ctx, TKREVERSE_SOLIDUS);
-    }
-    else if (token == TKRIGHT_SQUARE_BRACKET)
-    {
-        /*Other => RIGHT_SQUARE_BRACKET */
-        _CHECK result = PlaygroundLang_Match(ctx, TKRIGHT_SQUARE_BRACKET);
-    }
-    else if (token == TKCIRCUMFLEX_ACCENT)
-    {
-        /*Other => CIRCUMFLEX_ACCENT */
-        _CHECK result = PlaygroundLang_Match(ctx, TKCIRCUMFLEX_ACCENT);
-    }
-    else if (token == TKLOW_LINE)
-    {
-        /*Other => LOW_LINE */
-        _CHECK result = PlaygroundLang_Match(ctx, TKLOW_LINE);
-    }
-    else if (token == TKGRAVE_ACCENT)
-    {
-        /*Other => GRAVE_ACCENT */
-        _CHECK result = PlaygroundLang_Match(ctx, TKGRAVE_ACCENT);
-    }
-    else if (token == TKLEFT_CURLY_BRACKET)
-    {
-        /*Other => LEFT_CURLY_BRACKET */
-        _CHECK result = PlaygroundLang_Match(ctx, TKLEFT_CURLY_BRACKET);
-    }
-    else if (token == TKVERTICAL_LINE)
-    {
-        /*Other => VERTICAL_LINE */
-        _CHECK result = PlaygroundLang_Match(ctx, TKVERTICAL_LINE);
-    }
-    else if (token == TKRIGHT_CURLY_BRACKET)
-    {
-        /*Other => RIGHT_CURLY_BRACKET */
-        _CHECK result = PlaygroundLang_Match(ctx, TKRIGHT_CURLY_BRACKET);
-    }
-    else if (token == TKLINECOMMENT)
-    {
-        /*Other => LINECOMMENT */
-        _CHECK result = PlaygroundLang_Match(ctx, TKLINECOMMENT);
-    }
-    else if (token == TKCOMMENT)
-    {
-        /*Other => COMMENT */
-        _CHECK result = PlaygroundLang_Match(ctx, TKCOMMENT);
-    }
-    else if (token == TKCHAR)
-    {
-        /*Other => CHAR */
-        _CHECK result = PlaygroundLang_Match(ctx, TKCHAR);
-    }
-    else if (token == TKSTRING)
-    {
-        /*Other => STRING */
-        _CHECK result = PlaygroundLang_Match(ctx, TKSTRING);
-    }
-    else if (token == TKNUMBER)
-    {
-        /*Other => NUMBER */
-        _CHECK result = PlaygroundLang_Match(ctx, TKNUMBER);
-    }
-    else if (token == TKAuto)
-    {
-        /*Other => Auto */
-        _CHECK result = PlaygroundLang_Match(ctx, TKAuto);
-    }
-    else if (token == TKBreak)
-    {
-        /*Other => Break */
-        _CHECK result = PlaygroundLang_Match(ctx, TKBreak);
-    }
-    else if (token == TKCase)
-    {
-        /*Other => Case */
-        _CHECK result = PlaygroundLang_Match(ctx, TKCase);
-    }
-    else if (token == TKChar)
-    {
-        /*Other => Char */
-        _CHECK result = PlaygroundLang_Match(ctx, TKChar);
-    }
-    else if (token == TKConst)
-    {
-        /*Other => Const */
-        _CHECK result = PlaygroundLang_Match(ctx, TKConst);
-    }
-    else if (token == TKContinue)
-    {
-        /*Other => Continue */
-        _CHECK result = PlaygroundLang_Match(ctx, TKContinue);
-    }
-    else if (token == TKDefault)
-    {
-        /*Other => Default */
-        _CHECK result = PlaygroundLang_Match(ctx, TKDefault);
-    }
-    else if (token == TKDo)
-    {
-        /*Other => Do */
-        _CHECK result = PlaygroundLang_Match(ctx, TKDo);
-    }
-    else if (token == TKDouble)
-    {
-        /*Other => Double */
-        _CHECK result = PlaygroundLang_Match(ctx, TKDouble);
-    }
-    else if (token == TKElse)
-    {
-        /*Other => Else */
-        _CHECK result = PlaygroundLang_Match(ctx, TKElse);
-    }
-    else if (token == TKEnum)
-    {
-        /*Other => Enum */
-        _CHECK result = PlaygroundLang_Match(ctx, TKEnum);
-    }
-    else if (token == TKExtern)
-    {
-        /*Other => Extern */
-        _CHECK result = PlaygroundLang_Match(ctx, TKExtern);
-    }
-    else if (token == TKFloat)
-    {
-        /*Other => Float */
-        _CHECK result = PlaygroundLang_Match(ctx, TKFloat);
-    }
-    else if (token == TKFor)
-    {
-        /*Other => For */
-        _CHECK result = PlaygroundLang_Match(ctx, TKFor);
-    }
-    else if (token == TKGoto)
-    {
-        /*Other => Goto */
-        _CHECK result = PlaygroundLang_Match(ctx, TKGoto);
-    }
-    else if (token == TKIf)
-    {
-        /*Other => If */
-        _CHECK result = PlaygroundLang_Match(ctx, TKIf);
-    }
-    else if (token == TKInline)
-    {
-        /*Other => Inline */
-        _CHECK result = PlaygroundLang_Match(ctx, TKInline);
-    }
-    else if (token == TKInt)
-    {
-        /*Other => Int */
-        _CHECK result = PlaygroundLang_Match(ctx, TKInt);
-    }
-    else if (token == TKLong)
-    {
-        /*Other => Long */
-        _CHECK result = PlaygroundLang_Match(ctx, TKLong);
-    }
-    else if (token == TKRegister)
-    {
-        /*Other => Register */
-        _CHECK result = PlaygroundLang_Match(ctx, TKRegister);
-    }
-    else if (token == TKRestrict)
-    {
-        /*Other => Restrict */
-        _CHECK result = PlaygroundLang_Match(ctx, TKRestrict);
-    }
-    else if (token == TKReturn)
-    {
-        /*Other => Return */
-        _CHECK result = PlaygroundLang_Match(ctx, TKReturn);
-    }
-    else if (token == TKShort)
-    {
-        /*Other => Short */
-        _CHECK result = PlaygroundLang_Match(ctx, TKShort);
-    }
-    else if (token == TKSigned)
-    {
-        /*Other => Signed */
-        _CHECK result = PlaygroundLang_Match(ctx, TKSigned);
-    }
-    else if (token == TKSizeOf)
-    {
-        /*Other => SizeOf */
-        _CHECK result = PlaygroundLang_Match(ctx, TKSizeOf);
-    }
-    else if (token == TKStatic)
-    {
-        /*Other => Static */
-        _CHECK result = PlaygroundLang_Match(ctx, TKStatic);
-    }
-    else if (token == TKStruct)
-    {
-        /*Other => Struct */
-        _CHECK result = PlaygroundLang_Match(ctx, TKStruct);
-    }
-    else if (token == TKSwitch)
-    {
-        /*Other => Switch */
-        _CHECK result = PlaygroundLang_Match(ctx, TKSwitch);
-    }
-    else if (token == TKTypedef)
-    {
-        /*Other => Typedef */
-        _CHECK result = PlaygroundLang_Match(ctx, TKTypedef);
-    }
-    else if (token == TKUnion)
-    {
-        /*Other => Union */
-        _CHECK result = PlaygroundLang_Match(ctx, TKUnion);
-    }
-    else if (token == TKUnsigned)
-    {
-        /*Other => Unsigned */
-        _CHECK result = PlaygroundLang_Match(ctx, TKUnsigned);
-    }
-    else if (token == TKVoid)
-    {
-        /*Other => Void */
-        _CHECK result = PlaygroundLang_Match(ctx, TKVoid);
-    }
-    else if (token == TKVolatile)
-    {
-        /*Other => Volatile */
-        _CHECK result = PlaygroundLang_Match(ctx, TKVolatile);
-    }
-    else if (token == TKWhile)
-    {
-        /*Other => While */
-        _CHECK result = PlaygroundLang_Match(ctx, TKWhile);
-    }
-    else if (token == TKAlignAs)
-    {
-        /*Other => AlignAs */
-        _CHECK result = PlaygroundLang_Match(ctx, TKAlignAs);
-    }
-    else if (token == TKAlignOf)
-    {
-        /*Other => AlignOf */
-        _CHECK result = PlaygroundLang_Match(ctx, TKAlignOf);
-    }
-    else if (token == TKAtomic)
-    {
-        /*Other => Atomic */
-        _CHECK result = PlaygroundLang_Match(ctx, TKAtomic);
-    }
-    else if (token == TKBool)
-    {
-        /*Other => Bool */
-        _CHECK result = PlaygroundLang_Match(ctx, TKBool);
-    }
-    else if (token == TKComplex)
-    {
-        /*Other => Complex */
-        _CHECK result = PlaygroundLang_Match(ctx, TKComplex);
-    }
-    else if (token == TKGeneric)
-    {
-        /*Other => Generic */
-        _CHECK result = PlaygroundLang_Match(ctx, TKGeneric);
-    }
-    else if (token == TKImaginary)
-    {
-        /*Other => Imaginary */
-        _CHECK result = PlaygroundLang_Match(ctx, TKImaginary);
-    }
-    else if (token == TKNoReturn)
-    {
-        /*Other => NoReturn */
-        _CHECK result = PlaygroundLang_Match(ctx, TKNoReturn);
-    }
-    else if (token == TKStaticAssert)
-    {
-        /*Other => StaticAssert */
-        _CHECK result = PlaygroundLang_Match(ctx, TKStaticAssert);
-    }
-    else if (token == TKThreadLocal)
-    {
-        /*Other => ThreadLocal */
-        _CHECK result = PlaygroundLang_Match(ctx, TKThreadLocal);
-    }
-    else if (token == TKFunc)
-    {
-        /*Other => Func */
-        _CHECK result = PlaygroundLang_Match(ctx, TKFunc);
-    }
-    else if (token == TKNumber)
-    {
-        /*Other => Number */
-        _CHECK result = PlaygroundLang_Match(ctx, TKNumber);
+    if (token == TKMinus ||
+        token == TKOpen ||
+        token == TKInteger ||
+        token == TKIdentifier)
+    {
+        /*F => P FOpt */
+        _CHECK Parse_P(ctx);
+        _CHECK Parse_FOpt(ctx);
+    }
+    else
+    {
+        PlaygroundLang_OnAction(ctx, OnError);
+        return RESULT_FAIL;
+    }
+
+    return result;
+}
+
+Result Parse_Expressions( PlaygroundLang_Context* ctx)
+{
+    Result result = RESULT_OK;
+    PlaygroundLang_Tokens token = ctx->token; 
+
+    if (token == TKMinus ||
+        token == TKOpen ||
+        token == TKInteger ||
+        token == TKIdentifier)
+    {
+        /*Expressions => Expression Expressions */
+        _CHECK Parse_Expression(ctx);
+        _CHECK Parse_Expressions(ctx);
+    }
+    else if (token == TKEndMark)
+    {
+        /*Expressions => Epsilon */
+        return RESULT_EMPTY; /*opt*/
+    }
+    else
+    {
+        PlaygroundLang_OnAction(ctx, OnError);
+        return RESULT_FAIL;
+    }
+
+    return result;
+}
+
+Result Parse_E2( PlaygroundLang_Context* ctx)
+{
+    Result result = RESULT_OK;
+    PlaygroundLang_Tokens token = ctx->token; 
+
+    if (token == TKPlus)
+    {
+        /*E2 => Plus T E2 */
+        _CHECK PlaygroundLang_Match(ctx, TKPlus);
+        _CHECK Parse_T(ctx);
+        _CHECK PlaygroundLang_OnAction(ctx,PrintPlus);
+        _CHECK Parse_E2(ctx);
+    }
+    else if (token == TKMinus)
+    {
+        /*E2 => Minus T E2 */
+        _CHECK PlaygroundLang_Match(ctx, TKMinus);
+        _CHECK Parse_T(ctx);
+        _CHECK PlaygroundLang_OnAction(ctx,PrintMinus);
+        _CHECK Parse_E2(ctx);
+    }
+    else if (token == TKClose ||
+        token == TKEnd)
+    {
+        /*E2 => Epsilon */
+        return RESULT_EMPTY; /*opt*/
+    }
+    else
+    {
+        PlaygroundLang_OnAction(ctx, OnError);
+        return RESULT_FAIL;
+    }
+
+    return result;
+}
+
+Result Parse_Expression( PlaygroundLang_Context* ctx)
+{
+    Result result = RESULT_OK;
+    PlaygroundLang_Tokens token = ctx->token; 
+
+    if (token == TKMinus ||
+        token == TKOpen ||
+        token == TKInteger ||
+        token == TKIdentifier)
+    {
+        /*Expression => E End */
+        _CHECK Parse_E(ctx);
+        _CHECK PlaygroundLang_Match(ctx, TKEnd);
+        _CHECK PlaygroundLang_OnAction(ctx,PrintNewLine);
+    }
+    else
+    {
+        PlaygroundLang_OnAction(ctx, OnError);
+        return RESULT_FAIL;
+    }
+
+    return result;
+}
+
+Result Parse_T2( PlaygroundLang_Context* ctx)
+{
+    Result result = RESULT_OK;
+    PlaygroundLang_Tokens token = ctx->token; 
+
+    if (token == TKMulti)
+    {
+        /*T2 => Multi F T2 */
+        _CHECK PlaygroundLang_Match(ctx, TKMulti);
+        _CHECK Parse_F(ctx);
+        _CHECK PlaygroundLang_OnAction(ctx,PrintMulti);
+        _CHECK Parse_T2(ctx);
+    }
+    else if (token == TKDiv)
+    {
+        /*T2 => Div F T2 */
+        _CHECK PlaygroundLang_Match(ctx, TKDiv);
+        _CHECK Parse_F(ctx);
+        _CHECK PlaygroundLang_OnAction(ctx,PrintDiv);
+        _CHECK Parse_T2(ctx);
+    }
+    else if (token == TKDiv ||
+        token == TKPlus ||
+        token == TKMulti ||
+        token == TKMinus ||
+        token == TKPower ||
+        token == TKClose ||
+        token == TKEnd)
+    {
+        /*T2 => Epsilon */
+        return RESULT_EMPTY; /*opt*/
+    }
+    else
+    {
+        PlaygroundLang_OnAction(ctx, OnError);
+        return RESULT_FAIL;
+    }
+
+    return result;
+}
+
+Result Parse_FOpt( PlaygroundLang_Context* ctx)
+{
+    Result result = RESULT_OK;
+    PlaygroundLang_Tokens token = ctx->token; 
+
+    if (token == TKPower)
+    {
+        /*FOpt => Power F */
+        _CHECK PlaygroundLang_Match(ctx, TKPower);
+        _CHECK Parse_F(ctx);
+        _CHECK PlaygroundLang_OnAction(ctx,PrintPower);
+    }
+    else if (token == TKDiv ||
+        token == TKPlus ||
+        token == TKMulti ||
+        token == TKMinus ||
+        token == TKPower ||
+        token == TKClose ||
+        token == TKEnd)
+    {
+        /*FOpt => Epsilon */
+        return RESULT_EMPTY; /*opt*/
+    }
+    else
+    {
+        PlaygroundLang_OnAction(ctx, OnError);
+        return RESULT_FAIL;
+    }
+
+    return result;
+}
+
+Result Parse_P( PlaygroundLang_Context* ctx)
+{
+    Result result = RESULT_OK;
+    PlaygroundLang_Tokens token = ctx->token; 
+
+    if (token == TKInteger)
+    {
+        /*P => Integer */
+        _CHECK PlaygroundLang_OnAction(ctx,PrintLexeme);
+        _CHECK PlaygroundLang_Match(ctx, TKInteger);
     }
     else if (token == TKIdentifier)
     {
-        /*Other => Identifier */
-        _CHECK result = PlaygroundLang_Match(ctx, TKIdentifier);
+        /*P => Identifier */
+        _CHECK PlaygroundLang_OnAction(ctx,PrintLexeme);
+        _CHECK PlaygroundLang_Match(ctx, TKIdentifier);
+    }
+    else if (token == TKOpen)
+    {
+        /*P => Open E Close */
+        _CHECK PlaygroundLang_Match(ctx, TKOpen);
+        _CHECK Parse_E(ctx);
+        _CHECK PlaygroundLang_Match(ctx, TKClose);
+    }
+    else if (token == TKMinus)
+    {
+        /*P => Minus T */
+        _CHECK PlaygroundLang_Match(ctx, TKMinus);
+        _CHECK Parse_T(ctx);
+        _CHECK PlaygroundLang_OnAction(ctx,PrintNeg);
     }
     else
     {
-        _CHECK result = PlaygroundLang_OnAction(ctx, OnError);
-        result = RESULT_FAIL;
+        PlaygroundLang_OnAction(ctx, OnError);
+        return RESULT_FAIL;
     }
 
     return result;
 }
 
-Result Parse_Item(PlaygroundLang_Context* ctx)
-{
-    Result result = RESULT_OK;
-    PlaygroundLang_Tokens token = ctx->token; 
-
-    if (token == TKPreInclude)
-    {
-        /*Item => Include */
-        _CHECK result = Parse_Include(ctx);
-    }
-    else if (token == TKPreDefine)
-    {
-        /*Item => Define */
-        _CHECK result = Parse_Define(ctx);
-    }
-    else if (token == TKSubAssign ||
-        token == TKIncOp ||
-        token == TKAddAssign ||
-        token == TKModAssign ||
-        token == TKAndAssign ||
-        token == TKEllipsis ||
-        token == TKRightAssign ||
-        token == TKDecOp ||
-        token == TKLeftAssign ||
-        token == TKMultAssign ||
-        token == TKDivAssign ||
-        token == TKXorAssign ||
-        token == TKOrAssign ||
-        token == TKRightOp ||
-        token == TKLeftOp ||
-        token == TKRIGHT_SQUARE_BRACKET ||
-        token == TKLEFT_PARENTHESIS ||
-        token == TKCOLON ||
-        token == TKCIRCUMFLEX_ACCENT ||
-        token == TKFULL_STOP ||
-        token == TKSEMICOLON ||
-        token == TKPLUS_SIGN ||
-        token == TKCOMMA ||
-        token == TKLeOp ||
-        token == TKQUOTATION_MARK ||
-        token == TKAndOp ||
-        token == TKEQUALS_SIGN ||
-        token == TKSOLIDUS ||
-        token == TKAMPERSAND ||
-        token == TKGeOp ||
-        token == TKOrOp ||
-        token == TKEXCLAMATION_MARK ||
-        token == TKRIGHT_PARENTHESIS ||
-        token == TKHYPHEN_MINUS ||
-        token == TKDOLLAR_SIGN ||
-        token == TKLESS_THAN_SIGN ||
-        token == TKQUESTION_MARK ||
-        token == TKPERCENT_SIGN ||
-        token == TKCOMMERCIAL_AT ||
-        token == TKLEFT_SQUARE_BRACKET ||
-        token == TKPtrOp ||
-        token == TKREVERSE_SOLIDUS ||
-        token == TKAPOSTROPHE ||
-        token == TKEqOp ||
-        token == TKGREATER_THAN_SIGN ||
-        token == TKASTERISK ||
-        token == TKNeOp ||
-        token == TKLOW_LINE ||
-        token == TKVERTICAL_LINE ||
-        token == TKCHAR ||
-        token == TKSTRING ||
-        token == TKLINECOMMENT ||
-        token == TKRIGHT_CURLY_BRACKET ||
-        token == TKGRAVE_ACCENT ||
-        token == TKLEFT_CURLY_BRACKET ||
-        token == TKCOMMENT ||
-        token == TKStaticAssert ||
-        token == TKThreadLocal ||
-        token == TKNoReturn ||
-        token == TKComplex ||
-        token == TKFunc ||
-        token == TKImaginary ||
-        token == TKIdentifier ||
-        token == TKGeneric ||
-        token == TKNumber ||
-        token == TKBool ||
-        token == TKReturn ||
-        token == TKAuto ||
-        token == TKInline ||
-        token == TKRegister ||
-        token == TKCase ||
-        token == TKChar ||
-        token == TKContinue ||
-        token == TKDefault ||
-        token == TKDouble ||
-        token == TKBreak ||
-        token == TKDo ||
-        token == TKExtern ||
-        token == TKConst ||
-        token == TKFloat ||
-        token == TKLong ||
-        token == TKSigned ||
-        token == TKInt ||
-        token == TKSizeOf ||
-        token == TKStatic ||
-        token == TKStruct ||
-        token == TKSwitch ||
-        token == TKNUMBER ||
-        token == TKElse ||
-        token == TKEnum ||
-        token == TKShort ||
-        token == TKFor ||
-        token == TKGoto ||
-        token == TKIf ||
-        token == TKRestrict ||
-        token == TKUnsigned ||
-        token == TKWhile ||
-        token == TKAlignAs ||
-        token == TKTypedef ||
-        token == TKVoid ||
-        token == TKAlignOf ||
-        token == TKAtomic ||
-        token == TKVolatile ||
-        token == TKUnion)
-    {
-        /*Item => Other */
-        _CHECK result = PlaygroundLang_OnAction(ctx, outro);
-        _CHECK result = Parse_Other(ctx);
-    }
-    else if (token == TKPreIfDef)
-    {
-        /*Item => IfDef */
-        _CHECK result = Parse_IfDef(ctx);
-    }
-    else if (token == TKPreIfNDef)
-    {
-        /*Item => IfNDef */
-        _CHECK result = Parse_IfNDef(ctx);
-    }
-    else if (token == TKBreakLine)
-    {
-        /*Item => BreakLine */
-        _CHECK result = PlaygroundLang_Match(ctx, TKBreakLine);
-    }
-    else
-    {
-        _CHECK result = PlaygroundLang_OnAction(ctx, OnError);
-        result = RESULT_FAIL;
-    }
-
-    return result;
-}
-
-Result Parse_Include(PlaygroundLang_Context* ctx)
-{
-    Result result = RESULT_OK;
-    PlaygroundLang_Tokens token = ctx->token; 
-
-    if (token == TKPreInclude)
-    {
-        /*Include => PreInclude FileName BreakLine */
-        _CHECK result = PlaygroundLang_OnAction(ctx, Include);
-        _CHECK result = PlaygroundLang_Match(ctx, TKPreInclude);
-        _CHECK result = Parse_FileName(ctx);
-        _CHECK result = PlaygroundLang_Match(ctx, TKBreakLine);
-    }
-    else
-    {
-        _CHECK result = PlaygroundLang_OnAction(ctx, OnError);
-        result = RESULT_FAIL;
-    }
-
-    return result;
-}
-
-Result Parse_PathPart(PlaygroundLang_Context* ctx)
-{
-    Result result = RESULT_OK;
-    PlaygroundLang_Tokens token = ctx->token; 
-
-    if (token == TKIdentifier)
-    {
-        /*PathPart => Identifier */
-        _CHECK result = PlaygroundLang_Match(ctx, TKIdentifier);
-    }
-    else if (token == TKFULL_STOP)
-    {
-        /*PathPart => FULL_STOP */
-        _CHECK result = PlaygroundLang_Match(ctx, TKFULL_STOP);
-    }
-    else
-    {
-        _CHECK result = PlaygroundLang_OnAction(ctx, OnError);
-        result = RESULT_FAIL;
-    }
-
-    return result;
-}
-
-Result Parse_FileName(PlaygroundLang_Context* ctx)
-{
-    Result result = RESULT_OK;
-    PlaygroundLang_Tokens token = ctx->token; 
-
-    if (token == TKSTRING)
-    {
-        /*FileName => STRING */
-        _CHECK result = PlaygroundLang_Match(ctx, TKSTRING);
-    }
-    else if (token == TKLESS_THAN_SIGN)
-    {
-        /*FileName => LESS_THAN_SIGN Path GREATER_THAN_SIGN */
-        _CHECK result = PlaygroundLang_Match(ctx, TKLESS_THAN_SIGN);
-        _CHECK result = Parse_Path(ctx);
-        _CHECK result = PlaygroundLang_Match(ctx, TKGREATER_THAN_SIGN);
-    }
-    else
-    {
-        _CHECK result = PlaygroundLang_OnAction(ctx, OnError);
-        result = RESULT_FAIL;
-    }
-
-    return result;
-}
-
-Result Parse_ElseOpt(PlaygroundLang_Context* ctx)
-{
-    Result result = RESULT_OK;
-    PlaygroundLang_Tokens token = ctx->token; 
-
-    if (token == TKPreElse)
-    {
-        /*ElseOpt => PreElse Items */
-        _CHECK result = PlaygroundLang_OnAction(ctx, elseif);
-        _CHECK result = PlaygroundLang_Match(ctx, TKPreElse);
-        _CHECK result = Parse_Items(ctx);
-    }
-    else if (token == TKPreEndif)
-    {
-        /*ElseOpt => Epsilon */
-        result = RESULT_EMPTY; /*opt*/
-    }
-    else
-    {
-        _CHECK result = PlaygroundLang_OnAction(ctx, OnError);
-        result = RESULT_FAIL;
-    }
-
-    return result;
-}
-
-Result Parse_Path(PlaygroundLang_Context* ctx)
-{
-    Result result = RESULT_OK;
-    PlaygroundLang_Tokens token = ctx->token; 
-
-    if (token == TKFULL_STOP ||
-        token == TKIdentifier)
-    {
-        /*Path => PathPart Path */
-        _CHECK result = Parse_PathPart(ctx);
-        _CHECK result = Parse_Path(ctx);
-    }
-    else if (token == TKGREATER_THAN_SIGN)
-    {
-        /*Path => Epsilon */
-        result = RESULT_EMPTY; /*opt*/
-    }
-    else
-    {
-        _CHECK result = PlaygroundLang_OnAction(ctx, OnError);
-        result = RESULT_FAIL;
-    }
-
-    return result;
-}
-
-Result Parse_ArgsOpt(PlaygroundLang_Context* ctx)
-{
-    Result result = RESULT_OK;
-    PlaygroundLang_Tokens token = ctx->token; 
-
-    if (token == TKLEFT_PARENTHESIS)
-    {
-        /*ArgsOpt => LEFT_PARENTHESIS ArgumentList RIGHT_PARENTHESIS */
-        _CHECK result = PlaygroundLang_Match(ctx, TKLEFT_PARENTHESIS);
-        _CHECK result = Parse_ArgumentList(ctx);
-        _CHECK result = PlaygroundLang_Match(ctx, TKRIGHT_PARENTHESIS);
-    }
-    else if (token == TKPreInclude ||
-        token == TKEndMark ||
-        token == TKPreDefine ||
-        token == TKSubAssign ||
-        token == TKIncOp ||
-        token == TKAddAssign ||
-        token == TKModAssign ||
-        token == TKAndAssign ||
-        token == TKEllipsis ||
-        token == TKRightAssign ||
-        token == TKDecOp ||
-        token == TKPreIfNDef ||
-        token == TKPreIfDef ||
-        token == TKPreElse ||
-        token == TKPreEndif ||
-        token == TKLeftAssign ||
-        token == TKMultAssign ||
-        token == TKDivAssign ||
-        token == TKXorAssign ||
-        token == TKOrAssign ||
-        token == TKRightOp ||
-        token == TKLeftOp ||
-        token == TKRIGHT_SQUARE_BRACKET ||
-        token == TKLEFT_PARENTHESIS ||
-        token == TKCOLON ||
-        token == TKCIRCUMFLEX_ACCENT ||
-        token == TKFULL_STOP ||
-        token == TKSEMICOLON ||
-        token == TKPLUS_SIGN ||
-        token == TKCOMMA ||
-        token == TKLeOp ||
-        token == TKQUOTATION_MARK ||
-        token == TKAndOp ||
-        token == TKEQUALS_SIGN ||
-        token == TKSOLIDUS ||
-        token == TKAMPERSAND ||
-        token == TKGeOp ||
-        token == TKOrOp ||
-        token == TKEXCLAMATION_MARK ||
-        token == TKRIGHT_PARENTHESIS ||
-        token == TKHYPHEN_MINUS ||
-        token == TKDOLLAR_SIGN ||
-        token == TKLESS_THAN_SIGN ||
-        token == TKQUESTION_MARK ||
-        token == TKPERCENT_SIGN ||
-        token == TKCOMMERCIAL_AT ||
-        token == TKLEFT_SQUARE_BRACKET ||
-        token == TKPtrOp ||
-        token == TKREVERSE_SOLIDUS ||
-        token == TKAPOSTROPHE ||
-        token == TKEqOp ||
-        token == TKGREATER_THAN_SIGN ||
-        token == TKASTERISK ||
-        token == TKNeOp ||
-        token == TKLOW_LINE ||
-        token == TKVERTICAL_LINE ||
-        token == TKCHAR ||
-        token == TKSTRING ||
-        token == TKLINECOMMENT ||
-        token == TKRIGHT_CURLY_BRACKET ||
-        token == TKGRAVE_ACCENT ||
-        token == TKLEFT_CURLY_BRACKET ||
-        token == TKCOMMENT ||
-        token == TKStaticAssert ||
-        token == TKThreadLocal ||
-        token == TKNoReturn ||
-        token == TKComplex ||
-        token == TKFunc ||
-        token == TKImaginary ||
-        token == TKIdentifier ||
-        token == TKGeneric ||
-        token == TKNumber ||
-        token == TKBool ||
-        token == TKReturn ||
-        token == TKAuto ||
-        token == TKInline ||
-        token == TKRegister ||
-        token == TKCase ||
-        token == TKChar ||
-        token == TKContinue ||
-        token == TKDefault ||
-        token == TKDouble ||
-        token == TKBreak ||
-        token == TKBreakLine ||
-        token == TKDo ||
-        token == TKExtern ||
-        token == TKConst ||
-        token == TKFloat ||
-        token == TKLong ||
-        token == TKSigned ||
-        token == TKInt ||
-        token == TKSizeOf ||
-        token == TKStatic ||
-        token == TKStruct ||
-        token == TKSwitch ||
-        token == TKNUMBER ||
-        token == TKElse ||
-        token == TKEnum ||
-        token == TKShort ||
-        token == TKFor ||
-        token == TKGoto ||
-        token == TKIf ||
-        token == TKRestrict ||
-        token == TKUnsigned ||
-        token == TKWhile ||
-        token == TKAlignAs ||
-        token == TKTypedef ||
-        token == TKVoid ||
-        token == TKAlignOf ||
-        token == TKAtomic ||
-        token == TKVolatile ||
-        token == TKUnion)
-    {
-        /*ArgsOpt => Epsilon */
-        result = RESULT_EMPTY; /*opt*/
-    }
-    else
-    {
-        _CHECK result = PlaygroundLang_OnAction(ctx, OnError);
-        result = RESULT_FAIL;
-    }
-
-    return result;
-}
-
-Result Parse_AllToEndOfLine(PlaygroundLang_Context* ctx)
-{
-    Result result = RESULT_OK;
-    PlaygroundLang_Tokens token = ctx->token; 
-
-    if (token == TKSubAssign ||
-        token == TKIncOp ||
-        token == TKAddAssign ||
-        token == TKModAssign ||
-        token == TKAndAssign ||
-        token == TKEllipsis ||
-        token == TKRightAssign ||
-        token == TKDecOp ||
-        token == TKLeftAssign ||
-        token == TKMultAssign ||
-        token == TKDivAssign ||
-        token == TKXorAssign ||
-        token == TKOrAssign ||
-        token == TKRightOp ||
-        token == TKLeftOp ||
-        token == TKRIGHT_SQUARE_BRACKET ||
-        token == TKLEFT_PARENTHESIS ||
-        token == TKCOLON ||
-        token == TKCIRCUMFLEX_ACCENT ||
-        token == TKFULL_STOP ||
-        token == TKSEMICOLON ||
-        token == TKPLUS_SIGN ||
-        token == TKCOMMA ||
-        token == TKLeOp ||
-        token == TKQUOTATION_MARK ||
-        token == TKAndOp ||
-        token == TKEQUALS_SIGN ||
-        token == TKSOLIDUS ||
-        token == TKAMPERSAND ||
-        token == TKGeOp ||
-        token == TKOrOp ||
-        token == TKEXCLAMATION_MARK ||
-        token == TKRIGHT_PARENTHESIS ||
-        token == TKHYPHEN_MINUS ||
-        token == TKDOLLAR_SIGN ||
-        token == TKLESS_THAN_SIGN ||
-        token == TKQUESTION_MARK ||
-        token == TKPERCENT_SIGN ||
-        token == TKCOMMERCIAL_AT ||
-        token == TKLEFT_SQUARE_BRACKET ||
-        token == TKPtrOp ||
-        token == TKREVERSE_SOLIDUS ||
-        token == TKAPOSTROPHE ||
-        token == TKEqOp ||
-        token == TKGREATER_THAN_SIGN ||
-        token == TKASTERISK ||
-        token == TKNeOp ||
-        token == TKLOW_LINE ||
-        token == TKVERTICAL_LINE ||
-        token == TKCHAR ||
-        token == TKSTRING ||
-        token == TKLINECOMMENT ||
-        token == TKRIGHT_CURLY_BRACKET ||
-        token == TKGRAVE_ACCENT ||
-        token == TKLEFT_CURLY_BRACKET ||
-        token == TKCOMMENT ||
-        token == TKStaticAssert ||
-        token == TKThreadLocal ||
-        token == TKNoReturn ||
-        token == TKComplex ||
-        token == TKFunc ||
-        token == TKImaginary ||
-        token == TKIdentifier ||
-        token == TKGeneric ||
-        token == TKNumber ||
-        token == TKBool ||
-        token == TKReturn ||
-        token == TKAuto ||
-        token == TKInline ||
-        token == TKRegister ||
-        token == TKCase ||
-        token == TKChar ||
-        token == TKContinue ||
-        token == TKDefault ||
-        token == TKDouble ||
-        token == TKBreak ||
-        token == TKDo ||
-        token == TKExtern ||
-        token == TKConst ||
-        token == TKFloat ||
-        token == TKLong ||
-        token == TKSigned ||
-        token == TKInt ||
-        token == TKSizeOf ||
-        token == TKStatic ||
-        token == TKStruct ||
-        token == TKSwitch ||
-        token == TKNUMBER ||
-        token == TKElse ||
-        token == TKEnum ||
-        token == TKShort ||
-        token == TKFor ||
-        token == TKGoto ||
-        token == TKIf ||
-        token == TKRestrict ||
-        token == TKUnsigned ||
-        token == TKWhile ||
-        token == TKAlignAs ||
-        token == TKTypedef ||
-        token == TKVoid ||
-        token == TKAlignOf ||
-        token == TKAtomic ||
-        token == TKVolatile ||
-        token == TKUnion)
-    {
-        /*AllToEndOfLine => Other AllToEndOfLine */
-        _CHECK result = Parse_Other(ctx);
-        _CHECK result = Parse_AllToEndOfLine(ctx);
-    }
-    else if (token == TKPreInclude ||
-        token == TKEndMark ||
-        token == TKPreDefine ||
-        token == TKSubAssign ||
-        token == TKIncOp ||
-        token == TKAddAssign ||
-        token == TKModAssign ||
-        token == TKAndAssign ||
-        token == TKEllipsis ||
-        token == TKRightAssign ||
-        token == TKDecOp ||
-        token == TKPreIfNDef ||
-        token == TKPreIfDef ||
-        token == TKPreElse ||
-        token == TKPreEndif ||
-        token == TKLeftAssign ||
-        token == TKMultAssign ||
-        token == TKDivAssign ||
-        token == TKXorAssign ||
-        token == TKOrAssign ||
-        token == TKRightOp ||
-        token == TKLeftOp ||
-        token == TKRIGHT_SQUARE_BRACKET ||
-        token == TKLEFT_PARENTHESIS ||
-        token == TKCOLON ||
-        token == TKCIRCUMFLEX_ACCENT ||
-        token == TKFULL_STOP ||
-        token == TKSEMICOLON ||
-        token == TKPLUS_SIGN ||
-        token == TKCOMMA ||
-        token == TKLeOp ||
-        token == TKQUOTATION_MARK ||
-        token == TKAndOp ||
-        token == TKEQUALS_SIGN ||
-        token == TKSOLIDUS ||
-        token == TKAMPERSAND ||
-        token == TKGeOp ||
-        token == TKOrOp ||
-        token == TKEXCLAMATION_MARK ||
-        token == TKRIGHT_PARENTHESIS ||
-        token == TKHYPHEN_MINUS ||
-        token == TKDOLLAR_SIGN ||
-        token == TKLESS_THAN_SIGN ||
-        token == TKQUESTION_MARK ||
-        token == TKPERCENT_SIGN ||
-        token == TKCOMMERCIAL_AT ||
-        token == TKLEFT_SQUARE_BRACKET ||
-        token == TKPtrOp ||
-        token == TKREVERSE_SOLIDUS ||
-        token == TKAPOSTROPHE ||
-        token == TKEqOp ||
-        token == TKGREATER_THAN_SIGN ||
-        token == TKASTERISK ||
-        token == TKNeOp ||
-        token == TKLOW_LINE ||
-        token == TKVERTICAL_LINE ||
-        token == TKCHAR ||
-        token == TKSTRING ||
-        token == TKLINECOMMENT ||
-        token == TKRIGHT_CURLY_BRACKET ||
-        token == TKGRAVE_ACCENT ||
-        token == TKLEFT_CURLY_BRACKET ||
-        token == TKCOMMENT ||
-        token == TKStaticAssert ||
-        token == TKThreadLocal ||
-        token == TKNoReturn ||
-        token == TKComplex ||
-        token == TKFunc ||
-        token == TKImaginary ||
-        token == TKIdentifier ||
-        token == TKGeneric ||
-        token == TKNumber ||
-        token == TKBool ||
-        token == TKReturn ||
-        token == TKAuto ||
-        token == TKInline ||
-        token == TKRegister ||
-        token == TKCase ||
-        token == TKChar ||
-        token == TKContinue ||
-        token == TKDefault ||
-        token == TKDouble ||
-        token == TKBreak ||
-        token == TKBreakLine ||
-        token == TKDo ||
-        token == TKExtern ||
-        token == TKConst ||
-        token == TKFloat ||
-        token == TKLong ||
-        token == TKSigned ||
-        token == TKInt ||
-        token == TKSizeOf ||
-        token == TKStatic ||
-        token == TKStruct ||
-        token == TKSwitch ||
-        token == TKNUMBER ||
-        token == TKElse ||
-        token == TKEnum ||
-        token == TKShort ||
-        token == TKFor ||
-        token == TKGoto ||
-        token == TKIf ||
-        token == TKRestrict ||
-        token == TKUnsigned ||
-        token == TKWhile ||
-        token == TKAlignAs ||
-        token == TKTypedef ||
-        token == TKVoid ||
-        token == TKAlignOf ||
-        token == TKAtomic ||
-        token == TKVolatile ||
-        token == TKUnion)
-    {
-        /*AllToEndOfLine => Epsilon */
-        result = RESULT_EMPTY; /*opt*/
-    }
-    else
-    {
-        _CHECK result = PlaygroundLang_OnAction(ctx, OnError);
-        result = RESULT_FAIL;
-    }
-
-    return result;
-}
-
-Result Parse_Undef(PlaygroundLang_Context* ctx)
-{
-    Result result = RESULT_OK;
-    PlaygroundLang_Tokens token = ctx->token; 
-
-    if (token == TKPreUndef)
-    {
-        /*Undef => PreUndef Identifier BreakLine */
-        _CHECK result = PlaygroundLang_Match(ctx, TKPreUndef);
-        _CHECK result = PlaygroundLang_Match(ctx, TKIdentifier);
-        _CHECK result = PlaygroundLang_Match(ctx, TKBreakLine);
-    }
-    else
-    {
-        _CHECK result = PlaygroundLang_OnAction(ctx, OnError);
-        result = RESULT_FAIL;
-    }
-
-    return result;
-}
-
-Result Parse_ArgumentList(PlaygroundLang_Context* ctx)
-{
-    Result result = RESULT_OK;
-    PlaygroundLang_Tokens token = ctx->token; 
-
-    if (token == TKIdentifier)
-    {
-        /*ArgumentList => Identifier ArgumentListFollow */
-        _CHECK result = PlaygroundLang_Match(ctx, TKIdentifier);
-        _CHECK result = Parse_ArgumentListFollow(ctx);
-    }
-    else
-    {
-        _CHECK result = PlaygroundLang_OnAction(ctx, OnError);
-        result = RESULT_FAIL;
-    }
-
-    return result;
-}
-
-Result Parse_ArgumentListFollow(PlaygroundLang_Context* ctx)
-{
-    Result result = RESULT_OK;
-    PlaygroundLang_Tokens token = ctx->token; 
-
-    if (token == TKCOMMA)
-    {
-        /*ArgumentListFollow => COMMA Identifier ArgumentListFollow */
-        _CHECK result = PlaygroundLang_Match(ctx, TKCOMMA);
-        _CHECK result = PlaygroundLang_Match(ctx, TKIdentifier);
-        _CHECK result = Parse_ArgumentListFollow(ctx);
-    }
-    else if (token == TKRIGHT_PARENTHESIS)
-    {
-        /*ArgumentListFollow => Epsilon */
-        result = RESULT_EMPTY; /*opt*/
-    }
-    else
-    {
-        _CHECK result = PlaygroundLang_OnAction(ctx, OnError);
-        result = RESULT_FAIL;
-    }
-
-    return result;
-}
-
-Result PlaygroundLang_Parse(PlaygroundLang_Context* ctx){
-   return Parse_Main(ctx);
-}

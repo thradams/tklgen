@@ -8,25 +8,13 @@
 #define PLAYGROUNDMODULE_H
 
 
-
+#include "Result.h"
 #include "PlaygroundLang.h"
-/*typedef enum 
-{
-  FIM,
-  outro,
-  Include,
-  ifdef_begin,
-  ifdef_end,
-  elseif,
-  ifndef,
-  define,
-  OnError
-} PlaygroundLang_Actions;
-*/
-const char* PlaygroundLang_Actions_Text(PlaygroundLang_Actions e);
+
 
 
 Result PlaygroundLang_Parse(PlaygroundLang_Context* ctx);
+const char* PlaygroundLang_Actions_Text(PlaygroundLang_Actions e);
 
 
 

@@ -2,6 +2,7 @@
 #include "PlaygroundModuleParser.h"
 #include "assert.h"
 #include <stdio.h>
+#include "PlaygroundModuleParser.h"
 
 Result PlaygroundLang_NextTokenNoInterleave(Stream* stream,
                                             StrBuilder* strBuilder,

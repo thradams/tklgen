@@ -1,6 +1,7 @@
 #pragma once
 #include "Result.h"
 #include "StringEx.h"
+#include <stdio.h>
 
 typedef struct
 {

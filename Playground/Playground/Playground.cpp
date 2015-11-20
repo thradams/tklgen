@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 #include "PlaygroundModuleLex.h"
-
+#include "PlaygroundLang.h"
 
 #include "PlaygroundModuleParser.h"
 #include <stdio.h>

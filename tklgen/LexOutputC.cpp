@@ -292,7 +292,7 @@ void MakeGetNext2(const MapIntToCharInt& map,
     MapIntToCharInt::const_iterator it = map.begin();
 
 
-    stream <<  L"static int " << grammarName << L"_GetNext(int state, wchar_t ch)" << endl;
+    stream <<  L"int " << grammarName << L"_GetNext(int state, wchar_t ch)" << endl;
 
 
     stream <<   L"{" << endl;
@@ -328,7 +328,7 @@ void MakeGetNext(const MapIntToCharInt& map,
 
     if (code)
     {
-        stream << L"    static int GetNext(int state, wchar_t ch)" << endl;
+        stream << L"    int GetNext(int state, wchar_t ch)" << endl;
         stream << L"    {" << endl;
         stream << L"      switch (state)" << endl;
         stream << L"      {" << endl;
@@ -494,7 +494,7 @@ void MakeTokenEnum(const std::wstring& enumName0,
     {
         if (bHeader)
         {
-            stream << L"enum " << enumName << endl;
+            stream << L"typedef enum " << endl;
             stream << L"{" << endl;
         }
     }
@@ -522,20 +522,20 @@ void MakeTokenEnum(const std::wstring& enumName0,
     {
         if (bHeader)
         {
-          stream << L"};" << endl << endl;
+          stream << L"} " << enumName << L";" << endl << endl;
         }
     }
 
     if (bHeader)
     {
-        stream << L"const wchar_t* " << enumName << "_ToString(enum " << enumName << L" e);" << endl;
+        stream << L"const char* " << enumName << "_ToString(" << enumName << L" e);" << endl;
         stream << endl;
     }
     else
     {
         if (code)
         {
-            stream << L"const wchar_t* " << enumName << "_ToString(enum " << enumName << L" e)" << endl;
+            stream << L"const char* " << enumName << "_ToString(" << enumName << L" e)" << endl;
 
             stream << L"{" << endl;
             stream << L"    switch(e)" << endl;
@@ -543,12 +543,12 @@ void MakeTokenEnum(const std::wstring& enumName0,
 
             for (int i = 0; i < (int)tokensNames.size(); i++)
             {
-                stream << L"    case " << tokenPrefix << (tokensNames[i]) << L": return L\"" << tokensNames[i] << L"\";" << endl;
+                stream << L"    case " << tokenPrefix << (tokensNames[i]) << L": return \"" << tokensNames[i] << L"\";" << endl;
             }
 
             stream << L"    default:break;" << endl;
             stream << L"    }" << endl;
-            stream << L"    return L\"\";" << endl;
+            stream << L"    return \"\";" << endl;
             stream << L"}" << endl << endl;
         }
     }
@@ -573,7 +573,7 @@ void MakeGetTokenFromState(const std::wstring& enumName0,
 
     if (code)
     {
-        stream <<  L"static int " << grammarName << L"_IsInterleave(enum " << enumName << " tk)" << endl;
+        stream <<  L"int " << grammarName << L"_IsInterleave(" << enumName << " tk)" << endl;
         stream  <<  L"{" << endl;
 
         if (tokenInterleaveIndex < 0)
@@ -589,7 +589,7 @@ void MakeGetTokenFromState(const std::wstring& enumName0,
         stream  << endl;
 
 
-        stream <<  L"static int " << grammarName  << L"_GetTokenFromState(int state, enum " << enumName << L"* tk)" << endl;
+        stream <<  L"int " << grammarName  << L"_GetTokenFromState(int state, " << enumName << L"* tk)" << endl;
 
 
         stream  <<  L"{" << endl;
@@ -713,117 +713,8 @@ static std::wstring MakeUpper(const std::wstring& s)
     return r;
 }
 
-#define STR \
-L"ResultCode %_NextTokenNoInterleave(struct sstream* stream,\n"\
-L"                                     wchar_t** buffer,\n"\
-L"                                     int* bufferSize,\n"\
-L"                                     enum %_Tokens* tk)\n"\
-L"{\n"\
-L"    if (*bufferSize > 0)\n"\
-L"    {\n"\
-L"        (*buffer)[0] = 0;\n"\
-L"    }\n"\
-L"\n"\
-L"    int lastGoodState = -2;\n"\
-L"    int currentState = 0;\n"\
-L"    wchar_t ch;\n"\
-L"    int index = 0;\n"\
-L"\n"\
-L"    ResultCode r = sstream_getwc(stream, &ch);\n"\
-L"\n"\
-L"    while (r == ResultCodeSuccess)\n"\
-L"    {\n"\
-L"        currentState = %_GetNext(currentState, ch);\n"\
-L"\n"\
-L"        if (lastGoodState == -2 &&\n"\
-L"        currentState == -1)\n"\
-L"        {\n"\
-L"            assert(false);\n"\
-L"            return ResultCodeError;\n"\
-L"        }\n"\
-L"\n"\
-L"        if (currentState == -1)\n"\
-L"        {\n"\
-L"            sstream_ungetwc(stream, ch);\n"\
-L"            break;\n"\
-L"        }\n"\
-L"\n"\
-L"        enum %_Tokens tk2;\n"\
-L"\n"\
-L"        if (%_GetTokenFromState(currentState, &tk2))\n"\
-L"        {\n"\
-L"            *tk = tk2;\n"\
-L"            lastGoodState = currentState;\n"\
-L"        }\n"\
-L"\n"\
-L"        if (index >= ((*bufferSize) - 1))\n"\
-L"        {\n"\
-L"            size_t newSize = (*bufferSize) + 4 + 2 * (*bufferSize) / 3;\n"\
-L"            wchar_t* pNewBuffer = (wchar_t*)realloc(*buffer, sizeof(wchar_t) *newSize);\n"\
-L"\n"\
-L"            if (pNewBuffer == NULL)\n"\
-L"            {\n"\
-L"                return ResultCodeOutOfMem;\n"\
-L"            }\n"\
-L"\n"\
-L"            *buffer = pNewBuffer;\n"\
-L"            *bufferSize = newSize;\n"\
-L"        }\n"\
-L"\n"\
-L"        (*buffer)[index++] = ch;\n"\
-L"        r = sstream_getwc(stream, &ch);\n"\
-L"    }\n"\
-L"\n"\
-L"\n"\
-L"\n"\
-L"    (*buffer)[index] = 0;\n"\
-L"    return ResultCodeSuccess;\n"\
-L"}\n"\
-L"\n"\
-L"ResultCode %_NextToken(struct sstream* stream,\n"\
-L"                         wchar_t** buffer,\n"\
-L"                         int* bufferSize,\n"\
-L"                         enum %_Tokens* tk)\n"\
-L"{\n"\
-L"    ResultCode r = ResultCodeError;\n"\
-L"\n"\
-L"    for (;;)\n"\
-L"    {\n"\
-L"        r = %_NextTokenNoInterleave(stream, buffer, bufferSize, tk);\n"\
-L"\n"\
-L"        if (r == ResultCodeSuccess)\n"\
-L"        {\n"\
-L"            if (!%_IsInterleave(*tk))\n"\
-L"            {\n"\
-L"                break;\n"\
-L"            }\n"\
-L"        }\n"\
-L"        else\n"\
-L"        {\n"\
-L"            break;\n"\
-L"        }\n"\
-L"    }\n"\
-L"\n"\
-L"    return r;\n"\
-L"}\n"\
-L"\n"
 
-void GenerateScanner(std::wostream& fileout, const std::wstring& grammarName)
-{
-    wchar_t* p = STR;
-    while (*p)
-    {
-        if (*p == L'%')
-        {
-            fileout << grammarName;
-        }
-        else
-        {
-            fileout << *p;
-        }
-        p++;
-    }
-}
+
 
 void GenerateCodeC(std::wostream& fileout,
                    const std::wstring& fileOutName,
@@ -859,9 +750,9 @@ void GenerateCodeC(std::wostream& fileout,
     }
     os << "\n";
     os << "#include \"" << moduleName << L"Lex.h\"\n";
-    os << "#include <assert.h>\n\n";
-    os << L"#include \"errors.h\"\n";
-    os << L"#include <stdlib.h>\n";
+    //os << "#include <assert.h>\n\n";
+    //os << L"#include \"errors.h\"\n";
+    //os << L"#include <stdlib.h>\n";
 
     MakeTokenEnum(enumName,
                   os,
@@ -901,7 +792,7 @@ void GenerateCodeC(std::wostream& fileout,
                           tokenPrefix,
                           grammarName);
 
-    GenerateScanner(os, grammarName);
+//    GenerateScanner(os, grammarName);
 }
 
 
@@ -941,8 +832,8 @@ void GenerateHeaderC(std::wostream& fileout,
         os << endl;
     }
 
-    os << "#include <wchar.h>" << endl;
-    os << "#include \"sstream.h\"" << endl;
+    //os << "#include <wchar.h>" << endl;
+    //os << "#include \"sstream.h\"" << endl;
     os << endl << endl;
 
     MakeTokenEnum(enumName,
@@ -971,17 +862,22 @@ void GenerateHeaderC(std::wostream& fileout,
 
     os << endl;
 
-    os << "int " << grammarName << "_NextTokenNoInterleave(struct sstream* stream," << endl;
-    os << "  wchar_t** buffer," << endl;
-    os << "  int* bufferSize," << endl;
-    os << L" enum " << grammarName << L"_Tokens* tk);" << endl;
+    os << L"int " << grammarName << "_GetNext(int state, wchar_t ch);" << endl;
+    os << L"int " << grammarName << "_GetTokenFromState(int state, " << grammarName << L"_Tokens* tk);" << endl;
+    os << L"int " << grammarName << "_IsInterleave(" << grammarName << L"_Tokens tk);" << endl;
+   // os << L"const char* " << grammarName << L"_Tokens_ToString(" << grammarName << L"_Tokens e);" << endl;
 
-    os << endl;
+    //os << "int " << grammarName << "_NextTokenNoInterleave(struct sstream* stream," << endl;
+    //os << "  wchar_t** buffer," << endl;
+    //os << "  int* bufferSize," << endl;
+    //os << L" enum " << grammarName << L"_Tokens* tk);" << endl;
 
-    os << "int " << grammarName << "_NextToken(struct sstream* stream," << endl;
-    os << "   wchar_t** buffer," << endl;
-    os << "   int* bufferSize," << endl;
-    os << L"  enum " << grammarName << L"_Tokens* tk);" << endl;
+    //os << endl;
+
+    //os << "int " << grammarName << "_NextToken(struct sstream* stream," << endl;
+    //os << "   wchar_t** buffer," << endl;
+    //os << "   int* bufferSize," << endl;
+    //os << L"  enum " << grammarName << L"_Tokens* tk);" << endl;
 
 
     if (makecode)
