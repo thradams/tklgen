@@ -1,0 +1,13 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+*.suo
+*.ilk
+*.pdb
+*.ipch
+/Playground/Debug
+/Playground/Playground/Debug
+/Release
+/tklgen/Debug
+/tklgen/Debug

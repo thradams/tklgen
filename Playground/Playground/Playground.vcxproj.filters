@@ -21,19 +21,28 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="filetutils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sstream.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="PlaygroundModuleLex.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="PlaygroundModuleParser.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="errors.h">
+    <ClInclude Include="StrBuilder.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FStream.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StringEx.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dmalloc.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="assert.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PlaygroundLang.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -44,16 +53,25 @@
     <ClCompile Include="Playground.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="filetutils.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sstream.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="PlaygroundModuleLex.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PlaygroundModuleParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PlaygroundLang.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StrBuilder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FStream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StringEx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dmallocA.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

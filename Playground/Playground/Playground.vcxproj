@@ -75,30 +75,36 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <CustomBuild Include="grammar.txt">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">tklgen.exe grammar.txt -c -oh -op</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\release\tklgen.exe grammar.txt -c -oh -op </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PlaygroundModuleLex.h;PlaygroundModuleLex.cpp;PlaygroundModuleParser.h;PlaygroundModuleParser.cpp;%(Outputs)</Outputs>
     </CustomBuild>
     <Text Include="input.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="errors.h" />
-    <ClInclude Include="filetutils.h" />
+    <ClInclude Include="assert.h" />
+    <ClInclude Include="dmalloc.h" />
+    <ClInclude Include="FStream.h" />
+    <ClInclude Include="PlaygroundLang.h" />
     <ClInclude Include="PlaygroundModuleLex.h" />
     <ClInclude Include="PlaygroundModuleParser.h" />
-    <ClInclude Include="sstream.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="StrBuilder.h" />
+    <ClInclude Include="StringEx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="filetutils.cpp" />
+    <ClCompile Include="dmallocA.cpp" />
+    <ClCompile Include="FStream.cpp" />
     <ClCompile Include="Playground.cpp" />
+    <ClCompile Include="PlaygroundLang.cpp" />
     <ClCompile Include="PlaygroundModuleLex.cpp" />
     <ClCompile Include="PlaygroundModuleParser.cpp" />
-    <ClCompile Include="sstream.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="StrBuilder.cpp" />
+    <ClCompile Include="StringEx.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
