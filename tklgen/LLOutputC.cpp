@@ -14,6 +14,23 @@
 
 #define MM L"/*" << __LINE__ << L"*/"
 
+std::wstring GetFunctionName(Grammar& g,
+                             const std::wstring& name)
+{
+  std::wstring r;
+  if (name == L"Main")
+  {
+    r = g.GetLanguageName();
+    r += L"_Main";
+  }
+  else
+  {
+    r = L"Parse_";
+    r += name;
+  }
+  return r;
+}
+
 static std::wostream& PrintProduction(std::wostream& os,
     const Production& production,
     Grammar& g,
@@ -51,7 +68,7 @@ static std::wostream& PrintProduction(std::wostream& os,
         }
         else
         {
-            os << tabs << L"_CHECK Parse_" << production.GetRightSymbol(i)->GetName() << L"(ctx);\n";
+            os << tabs << L"_CHECK " << GetFunctionName(g, production.GetRightSymbol(i)->GetName()) << L"(ctx);\n";
             numberOfItems++;
         }
 
@@ -98,7 +115,7 @@ static std::wostream& PrintFowardDeclarations(std::wostream& os, Grammar& g, MMa
         {
             //mudou
             currentRuleIndex = it->m_pNotTerminal->GetIndex();
-            os << L"Result Parse_" << it->m_pNotTerminal->GetName() << L"( " << g.GetLanguageName() << L"_Context* ctx);\n";
+            os << L"Result " << GetFunctionName(g, it->m_pNotTerminal->GetName()) << L"( " << g.GetLanguageName() << L"_Context* ctx);\n";
             sub = 0;
         }
 
@@ -139,7 +156,7 @@ static void PrintActions(std::wostream& os, Grammar& g, bool virt)
     {
         os << L"  " << g.GetActionName(i) << L",\n";
     }
-    os << L"  OnError\n";
+    os << g.GetLanguageName() << L"_OnError\n";    
     os << L"}" << g.GetLanguageName() << L"_Actions;\n";
 
 
@@ -172,7 +189,7 @@ static void PrintActionsNames(std::wostream& os, Grammar& g, bool virt)
     L"\n"\
     L"{ACTIONS}"\
     L"\n"\
-    L"Result {GRAMMAR}_Parse({GRAMMAR}_Context* ctx);\n"\
+    L"Result {GRAMMAR}_Main({GRAMMAR}_Context* ctx);\n"\
     L"const char* {GRAMMAR}_Actions_Text({GRAMMAR}_Actions e);\n"\
     L"\n"\
     L"\n"
@@ -259,10 +276,6 @@ L"\n"\
 L"\n"\
 L"#define _CHECK if (result == RESULT_OK || result == RESULT_EMPTY) result = \n"\
 L"\n"\
-L"Result {GRAMMAR}_Parse({GRAMMAR}_Context* ctx)\n"\
-L"{\n"\
-L"  return Parse_Main(ctx);\n" \
-L"}\n"\
 L"\n"\
 L"\n"
 
@@ -317,7 +330,7 @@ void GenerateDescRecC(std::wostream& os,
     {
         int currentRuleIndex = it->m_pNotTerminal->GetIndex();
         //Faz todos desta regra (até ela mudar)
-        os << L"Result " << "Parse_" << it->m_pNotTerminal->GetName() << L"( " << g.GetLanguageName() + L"_Context* ctx)\n";
+        os << L"Result " << GetFunctionName(g, it->m_pNotTerminal->GetName()) << L"( " << g.GetLanguageName() + L"_Context* ctx)\n";
         os << L"{\n";
         os << TAB_1 << L"Result result = RESULT_OK;\n";
         os << TAB_1 << L"" << g.GetLanguageName() << L"_Tokens token = ctx->token; \n";
@@ -391,7 +404,7 @@ void GenerateDescRecC(std::wostream& os,
 
         os << TAB_1 << L"else\n";
         os << TAB_1 << L"{\n";
-        os << TAB__2 << g.GetLanguageName() << L"_OnAction(ctx, OnError);\n";
+        os << TAB__2 << g.GetLanguageName() << L"_OnAction(ctx, " << g.GetLanguageName() << L"_OnError); \n";
         os << TAB__2 << L"return RESULT_FAIL;\n";
         os << TAB_1 << L"}\n";
         os << L"\n";
@@ -434,7 +447,7 @@ static void GenerateDescRec3(std::wostream& os,
     {
         int currentRuleIndex = it->m_pNotTerminal->GetIndex();
         //Faz todos desta regra (até ela mudar)
-        os << TAB_1 << L"int " << "Parse_" << it->m_pNotTerminal->GetName() << L"( " << g.GetLanguageName() << L"_Context* ctx)\n";
+        os << TAB_1 << L"int " << GetFunctionName(g, it->m_pNotTerminal->GetName()) << L"( " << g.GetLanguageName() << L"_Context* ctx)\n";
         os << TAB_1 << L"{\n";
         int sub = 0;
         bool allsame = false;
