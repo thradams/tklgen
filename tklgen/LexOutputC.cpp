@@ -836,6 +836,14 @@ void GenerateHeaderC(std::wostream& fileout,
     //os << "#include \"sstream.h\"" << endl;
     os << endl << endl;
 
+    os << L"#ifndef __cplusplus" << endl;
+    os << L"#include <wchar.h>" << endl;
+    os << L"#include <stdbool.h>" << endl;
+    os << L"#endif" << endl;
+    
+    os << endl << endl;
+    
+
     MakeTokenEnum(enumName,
                   os,
                   tokensNames,
