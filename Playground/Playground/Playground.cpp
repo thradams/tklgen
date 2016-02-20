@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
                                                 argv[1]);
     if (result == RESULT_OK)
     {
-      PlaygroundLang_Parse(&context);
+      PlaygroundLang_Main(&context);
       
       PlaygroundLang_Context_Destroy(&context);
     }

@@ -11,7 +11,6 @@ Result PlaygroundLang_NextTokenNoInterleave(Stream* stream,
   int lastGoodState = -2;
   int currentState = 0;
   wchar_t ch;
-  int index = 0;
 
   Result r = Stream_Get(stream, &ch);
 
@@ -105,8 +104,10 @@ Result PlaygroundLang_Context_Init(PlaygroundLang_Context* p,
 
       StrBuilder_Destroy(&p->lexeme);
     }
+#pragma warning( push )
+#pragma warning( disable : 4127 )
   } while (0);
-  
+#pragma warning( pop )   
   return result;
 }
 

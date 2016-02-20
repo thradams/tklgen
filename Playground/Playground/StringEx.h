@@ -1,7 +1,7 @@
 
 #pragma once
 #include "Result.h"
-
+#include <stdbool.h>
 
 typedef char * StringC;
 #define STRINGC_INIT NULL
