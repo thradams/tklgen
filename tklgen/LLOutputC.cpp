@@ -270,14 +270,13 @@ void GenerateDescRecHeaderC(std::wostream& os,
     PrintOutputInterface(os, g);
 }
 
-#define SourceCode \
-L"\n"\
-L"\n"\
-L"\n"\
-L"#define _CHECK if (result == RESULT_OK || result == RESULT_EMPTY) result = \n"\
-L"\n"\
-L"\n"\
+const wchar_t* SourceCode = L"\n"
 L"\n"
+L"\n"
+L"#define _CHECK if (result == RESULT_OK || result == RESULT_EMPTY) result = \n"
+L"\n"
+L"\n"
+L"\n";
 
 void GenerateDescRecC(std::wostream& os,
     Grammar& g,
