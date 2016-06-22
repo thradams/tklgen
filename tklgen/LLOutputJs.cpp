@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#include "LLOutputC.h"
+#include "LLOutputJs.h"
 #include <iostream>
 #include <sstream>
 #include <set>
@@ -45,7 +45,7 @@ static std::wostream& PrintProduction(std::wostream& os,
     if (actionIndex >= 0)
     {
         //os << tabs << L"ctx->actions->" << g.GetActionName(actionIndex) << L"(ctx);\n";
-        os << tabs << L"_CHECK "<< g.GetLanguageName() << L"_OnAction(ctx," << g.GetActionName(actionIndex) << L");\n";
+        //os << tabs << L" "<< g.GetLanguageName() << L"_OnAction(ctx," << g.GetActionName(actionIndex) << L");\n";
     }
 
     actionIndexAtProduction++;
@@ -58,7 +58,7 @@ static std::wostream& PrintProduction(std::wostream& os,
         {
             if (pS != g.epsilon())
             {
-                os << tabs << L"_CHECK " << g.GetLanguageName() << L"_Match(ctx, " << tokenprefix << production.GetRightSymbol(i)->GetName() << L");\n";
+                os << tabs << L"if (result < 2) result = " /*<< g.GetLanguageName()*/ << L"Match(ctx, " << tokenprefix << production.GetRightSymbol(i)->GetName() << L");\n";
                 numberOfItems++;
             }
             else
@@ -68,7 +68,7 @@ static std::wostream& PrintProduction(std::wostream& os,
         }
         else
         {
-            os << tabs << L"_CHECK " << GetFunctionName(g, production.GetRightSymbol(i)->GetName()) << L"(ctx);\n";
+            os << tabs << L"if (result < 2) result = " << GetFunctionName(g, production.GetRightSymbol(i)->GetName()) << L"(ctx);\n";
             numberOfItems++;
         }
 
@@ -78,7 +78,7 @@ static std::wostream& PrintProduction(std::wostream& os,
         {
             //os << tabs << L"IFER(ctx->actions->" << g.GetActionName(actionIndex) << L"(ctx));\n";
             //os << tabs << L"IFER(" << g.GetActionName(actionIndex) << L"(ctx));\n";
-            os << tabs << L"_CHECK "<< g.GetLanguageName() << L"_OnAction(ctx," << g.GetActionName(actionIndex) << L");\n";
+            os << tabs << L" "<< g.GetLanguageName() << L"_OnAction(ctx," << g.GetActionName(actionIndex) << L");\n";
         }
 
         actionIndexAtProduction++;
@@ -90,42 +90,18 @@ static std::wostream& PrintProduction(std::wostream& os,
     {
         //os << tabs << L"IFER(ctx->actions->" << g.GetActionName(actionIndex) << L"(ctx));\n";
         //os << tabs << L"IFER(" << g.GetActionName(actionIndex) << L"(ctx));\n";
-        os << tabs << L"_CHECK " << g.GetLanguageName() << L"_OnAction(ctx," << g.GetActionName(actionIndex) << L");\n";
+        os << tabs << L" " << g.GetLanguageName() << L"_OnAction(ctx," << g.GetActionName(actionIndex) << L");\n";
 
     }
 
     if (numberOfItems == 0)
     {
-        os << tabs << L"return RESULT_EMPTY; /*opt*/\n";
+        os << tabs << L"result = RESULT_EMPTY; /*opt*/\n";
     }
     return os;
 }
 
 
-static std::wostream& PrintFowardDeclarations(std::wostream& os, Grammar& g, MMap& map)
-{
-    os << L"/*forward declarations*/ \n";
-    int i = 0;
-    int sub = 0;
-    int currentRuleIndex = -1;
-
-    for (auto it = map.begin(); it != map.end(); it++)
-    {
-        if (currentRuleIndex != it->m_pNotTerminal->GetIndex())
-        {
-            //mudou
-            currentRuleIndex = it->m_pNotTerminal->GetIndex();
-            os << L"Result " << GetFunctionName(g, it->m_pNotTerminal->GetName()) << L"( " << g.GetLanguageName() << L"_Context* ctx);\n";
-            sub = 0;
-        }
-
-        sub++;
-        i++;
-    }
-
-    os << L"\n\n";
-    return os;
-}
 
 
 static void PrintActions(std::wostream& os, Grammar& g, bool virt)
@@ -189,7 +165,7 @@ static void PrintActionsNames(std::wostream& os, Grammar& g, bool virt)
     L"\n"\
     L"{ACTIONS}"\
     L"\n"\
-    L"Result {GRAMMAR}_Main({GRAMMAR}_Context* ctx);\n"\
+    L"function {GRAMMAR}_Main({GRAMMAR}_Context* ctx) : Result;\n"\
     L"const char* {GRAMMAR}_Actions_Text({GRAMMAR}_Actions e);\n"\
     L"\n"\
     L"\n"
@@ -262,7 +238,7 @@ static int PreAnalise(MMap& map, MMap::iterator it, bool& allsame)
 }
 
 
-void GenerateDescRecHeaderC(std::wostream& os,
+void GenerateDescRecHeaderJs(std::wostream& os,
     Grammar& g,
     MMap& map,
     const std::wstring& tokenPrefix)
@@ -270,15 +246,8 @@ void GenerateDescRecHeaderC(std::wostream& os,
     PrintOutputInterface(os, g);
 }
 
-static const wchar_t* SourceCode = L"\n"
-L"\n"
-L"\n"
-L"#define _CHECK if (result == RESULT_OK || result == RESULT_EMPTY) result = \n"
-L"\n"
-L"\n"
-L"\n";
 
-void GenerateDescRecC(std::wostream& os,
+void GenerateDescRecJs(std::wostream& os,
     Grammar& g,
     MMap& map,
     const std::wstring& tokenPrefix,
@@ -293,31 +262,13 @@ void GenerateDescRecC(std::wostream& os,
     PrintGeneratedFileLicense(os);
 
 
-    os << L"\n";
-    os << L"#include \"stdafx.h\"\n";
-    os << L"#include <assert.h>\n";
-    os << L"\n";
-    os << L"#include \"" << g.GetModuleName() << L"Lex.h\"\n";
-    os << L"#include \"" << g.GetModuleName() << parserFileSuffix << L".h\"\n";
-    os << L"\n";
-    os << L"\n";
-    //os << L"#include \"sstream.h\"\n";
-    //os << L"#include \"errors.h\"\n";
-    os << L"\n";
-    os << L"\n";
-    PrintActionsNames(os, g, false);
+    //os << L"\n";    
+    //PrintActionsNames(os, g, false);
     //PrintActions(os, g, false);
     os << L"\n";
 
     
 
-    PrintFowardDeclarations(os, g, map);
-
-    std::wstring ws(SourceCode);
-    find_replace(ws, L"{GRAMMAR}", g.GetLanguageName());
-    find_replace(ws, L"{MODULE}", g.GetLanguageName());
-
-    os << ws;
 
 
     int i = 0;
@@ -329,10 +280,10 @@ void GenerateDescRecC(std::wostream& os,
     {
         int currentRuleIndex = it->m_pNotTerminal->GetIndex();
         //Faz todos desta regra (até ela mudar)
-        os << L"Result " << GetFunctionName(g, it->m_pNotTerminal->GetName()) << L"( " << g.GetLanguageName() + L"_Context* ctx)\n";
+        os << L"function " << GetFunctionName(g, it->m_pNotTerminal->GetName()) << L"(ctx : Parser) : Result\n";
         os << L"{\n";
-        os << TAB_1 << L"Result result = RESULT_OK;\n";
-        os << TAB_1 << L"" << g.GetLanguageName() << L"_Tokens token = ctx->token; \n";
+        os << TAB_1 << L"var result = RESULT_OK;\n";
+        os << TAB_1 << L"var token = Token(ctx); \n";
         os << L"\n";
 
         int sub = 0;
@@ -403,8 +354,8 @@ void GenerateDescRecC(std::wostream& os,
 
         os << TAB_1 << L"else\n";
         os << TAB_1 << L"{\n";
-        os << TAB__2 << g.GetLanguageName() << L"_OnAction(ctx, " << g.GetLanguageName() << L"_OnError); \n";
-        os << TAB__2 << L"return RESULT_FAIL;\n";
+        //os << TAB__2 << g.GetLanguageName() << L"_OnAction(ctx, " << g.GetLanguageName() << L"_OnError); \n";
+        os << TAB__2 << L"result = RESULT_FAIL;\n";
         os << TAB_1 << L"}\n";
         os << L"\n";
         os << TAB_1 << L"return result;\n";
@@ -436,7 +387,7 @@ static void GenerateDescRec3(std::wostream& os,
     os << L"\n";
 
     //PrintOutputClass(os, g);
-    PrintFowardDeclarations(os, g, map);
+
     int i = 0;
     int sub = 0;
     int currentRuleIndex = -1;

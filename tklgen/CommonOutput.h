@@ -1,8 +1,8 @@
 #pragma once
 #include <ostream>
 #include <string>
-
-
+#include <codecvt>
+#include <cassert>
 #define WIDEN2(x) L##x
 #define WIDEN(x) WIDEN2(x)
 
@@ -36,3 +36,6 @@ const wchar_t * FileStreamFile();
 
 bool FileExists(const wchar_t* fileName);
 void StringToNewFile(const wchar_t* psz, const wchar_t* fileName);
+
+
+std::string to_utf8_string(const std::wstring& wstr);

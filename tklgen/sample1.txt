@@ -1,184 +1,286 @@
-module Sample2
+
+//tklgen.exe grammar.txt -js -at
+
+module Main
 {
-  language Sample2
-  {   
-    token EndMark = '\0';
-    token EXCLAMATION_MARK = '!';
-    token NUMBER_SIGN = '#';
-    token DOLLAR_SIGN = '$';
-    token PERCENT_SIGN = '%';
-    token AMPERSAND = '&';
-    token APOSTROPHE = '\'';
-    token LEFT_PARENTHESIS = '(';
-    token RIGHT_PARENTHESIS = ')';
-    token ASTERISK = '*';
-    token PLUS_SIGN = '+';
-    token COMMA = ',';
-    token HYPHEN_MINUS = '-';
-    token FULL_STOP = '.';
-    token SOLIDUS = '/';
-    token COLON = ':';
-    token SEMICOLON = ';';
-    token LESS_THAN_SIGN = '<';
-    token EQUALS_SIGN = '=';
-    token GREATER_THAN_SIGN = '>';
-    token QUESTION_MARK = '?';
-    token COMMERCIAL_AT = '@';
-    token LEFT_SQUARE_BRACKET = '[';
-    token REVERSE_SOLIDUS = '\\';
-    token RIGHT_SQUARE_BRACKET = ']';
-    token CIRCUMFLEX_ACCENT = '^';
-    token LOW_LINE = '_';
-    token GRAVE_ACCENT = '`';
-    token LEFT_CURLY_BRACKET = '{';
-    token VERTICAL_LINE = '|';
-    token RIGHT_CURLY_BRACKET = '}';
+  language Main
+  {
 
-    token IntegerLiteral   = ('0'..'9')+;
-    token FloatingPointLiteral   = ('0'..'9')+;
+    //=============Lexical elements
 
-    token StringLiteral = '"'(
+    //========== Keywords
 
-      (' '..'!' | '#'..'[' | ']'..'\u00FF') |
+    //========= Identifiers
 
-      ('\\'('"' | '\\' | '/' | 'b' | 'f' | 'n' | 'r' | 't' | ('u'('0'..'9' | 'A'..'F' | 'a'..'f')('0'..'9' | 'A'..'F' | 'a'..'f')('0'..'9' | 'A'..'F' | 'a'..'f')('0'..'9' | 'A'..'F' | 'a'..'f'))))
+    //==Universal character names
 
-    ) *;
+    //=====Constants
 
-    token TIf = "if";
-    token Telse = "else";
-    token Tfor = "for";
-    token Twhile = "while";
-    token Treturn = "return";
-    token Tbreak = "break";
-    token Tvar = "var";
-    token Twith = "with";
-    token Tthis = "this";
-    token Ttrue = "true";
-    token Tfalse = "false";
-    token Tnull = "null";
-    token Tcontinue = "continue";
-    token Tfunction = "function";
-    token Tand = "&&";
-    token Tor = "||";
-    token Tnew = "new";
-    token Tdelete = "delete";
-    token Tin = "in";
-    token Teqeq = "==";
-    token Tshift = ">>";
-    token Tinc = "++";
+    syntax Enumeration_Constant = identifier;
+
+    //====== String literals
+
+    //======Punctuators
+
+    //===Header names
+
+    //Preprocessing numbers
+
+    //=========Expressions==========
+
+
+
+
+    //A.2.2 =============== Declarations =================
+
+    //ok
+    syntax Declaration =
+    Declaration_Specifiers Init_Declarator_List_Opt ';' |
+    Static_Assert_Declaration;
+
+    //ok
+    syntax Declaration_Specifiers =
+    Storage_Class_Specifier Declaration_SpecifiersOpt |
+    Type_Specifier          Declaration_SpecifiersOpt |
+    Type_Qualifier          Declaration_SpecifiersOpt |
+    Function_Specifier      Declaration_SpecifiersOpt |
+    Alignment_Specifier     Declaration_SpecifiersOpt;
+
+	//ok
+	syntax Init_Declarator_List_Opt = 
+	  Init_Declarator_List | empty;
+	
+	//ok
+    syntax Init_Declarator_List =
+    Init_Declarator |
+    Init_Declarator_List ',' Init_Declarator;
+
+	//ok
+    syntax Init_Declarator =
+    Declarator |
+    Declarator '=' Initializer;
+
+	// ========= Storage-class specifiers =========
+
+	//ok
+    syntax Storage_Class_Specifier =
+    typedef |
+    extern  |
+    static  |
+    _Thread_local |
+    auto |
+    register;
+
+	//============
+
+	// ========= Type specifiers =========
+	
+	//ok
+    syntax Type_Specifier =
+    void |
+    char |
+    short |
+    int |
+    long |
+    float |
+    double |
+    signed |
+    unsigned |
+    _Bool |
+    _Complex  |
+    Atomic_Type_Specifier |
+    Struct_Or_Union_Specifier |
+    Enum_Specifier |
+    Typedef_Name
+    ;
+	//===============
+
+	// ======== 6.7.2.1 Structure and union specifiers
+
+	//ok
+    syntax Struct_Or_Union_Specifier =
+    Struct_Or_Union IdentifierOpt '{' Struct_Declaration_List '}' |
+	Struct_Or_Union identifier;
+
+	//ok
+    syntax Struct_Declarator_ListOpt =
+    Struct_Declaration_List | empty;
+
+	//ok
+    syntax Struct_Declaration_List =
+    Struct_Declaration |
+    Struct_Declaration_List Struct_Declaration;
+
+	//ok
+    syntax Struct_Declaration =
+    Specifier_Qualifier_List Struct_Declarator_ListOpt ';' |
+    Static_Assert_Declaration;
+
+	//ok
+    syntax Specifier_Qualifier_ListOpt =
+    Specifier_Qualifier_List | empty;
+
+	//ok
+    syntax Specifier_Qualifier_List =
+      Type_Specifier Specifier_Qualifier_ListOpt |
+      Type_Qualifier Specifier_Qualifier_ListOpt;
+
+	//ok
+    syntax Struct_Declarator_List =
+    Struct_Declarator |
+    Struct_Declarator_List ','  Struct_Declarator;
+
+	
+    syntax DeclaratorOpt =
+      Declarator | empty;
+	
+	//ok
+	syntax Declarator = 
+	  PointerOpt Direct_Declarator;
+
+	syntax Direct_Declarator = 
+	  identifier ;
+	  //|
+	  //'(' Declarator ')';
+	   //|
+	  //Direct_Declarator '[' Type_Qualifier_ListOpt Assignment_ExpressionOpt ']' |
+	  //Direct_Declarator '[' static Type_Qualifier_ListOpt Assignment_Expression ']' |
+	  //Direct_Declarator '[' TypeQualifierList static Assignment_Expression ']' |
+	  //Direct_Declarator '[' Type_Qualifier_ListOpt '*' ']' |
+	  //Direct_Declarator  '(' Parameter_Type_List ')' |
+	  //Direct_Declarator  '(' Identifier_ListOpt ')' ;
+
+	  //ok
+	  syntax Pointer =
+    '*' Type_Qualifier_ListOpt |
+    '*' Type_Qualifier_ListOpt Pointer;
+
+    syntax Type_Qualifier_ListOpt =
+    Type_Qualifier_List | empty;
+
+    syntax Type_Qualifier_List =
+    Type_Qualifier |
+    Type_Qualifier_List Type_Qualifier;
+
+    syntax Struct_Declarator =
+    Declarator
+    DeclaratorOpt ':'  Constant_Expression;
+	//============
+
+	 /// ========== Enumeration specifiers ========
+
+
+
+    syntax Enum_Specifier = 
+    enum IdentifierOpt '{' Enumerator_List     '}' |
+    enum IdentifierOpt '{' Enumerator_List ',' '}' |
+    enum identifier;
+
+    syntax Enumerator_List =
+    Enumerator |
+    EnumeratorList ',' Enumerator;
+
+    syntax Enumerator =
+    Enumeration_Constant |
+    Enumeration_Constant '=' Constant_Expression;
+
+    
+	//========= Atomic type specifiers ==============
+
+	syntax Atomic_Type_Specifier =
+    _Atomic '(' Type_Name ')';
+
+
+	//========== Type qualifiers ============
+
+	syntax Type_Qualifier =
+    const |
+    restrict |
+    volatile |
+    _Atomic;
+
+	// ======== Function specifiers =========
+
+	syntax Function_Specifier =
+    inline |
+    _Noreturn;
+	
+	//==== Alignment specifier =====
+
+	syntax Alignment_Specifier =
+    _Alignas '(' Type_Name ')' |
+    _Alignas '(' Constant_Expression ')';
+
+	//======= Declarators 
+
+    syntax Initializer =
+    Assignment_Expression |
+    '{' Initializer_List '}'
+    '{' Initializer_List ',' '}' ';';
+
+    syntax Declaration_SpecifiersOpt =
+    Declaration_Specifiers | empty;
+
+
+    
     
 
-    token Identifier   = ('a'..'z' | 'A'..'Z' | '_' | '$') +
-    ('0'..'9' + ('a'..'z' | 'A'..'Z' | '_' | '$') +) ?;
 
+    syntax Main = Declaration;
 
-
-   interleave Blanks                  = ((" " | "\n" | "\t" | "\r") +) |
-                                             ("//"(' '..'~') * ("\n" | "\r\n")) |
-                                             ("/*"(((' '..')' | '+'..'~' | "\n" | "\r" | "\t")) |
-                                             ("*"(' '..'.' | '0'..'~' | "\n" | "\r" | "\t")))* "*/");
-
-
-    syntax Main = Program;
-    syntax Program =  empty | Element Program;
     
-    syntax Element =
-    "function" Identifier '(' ParameterListOpt ')' CompoundStatement |
-    Statement;
+    syntax Constant_Expression = empty ; //TODO
 
-    syntax ParameterListOpt = empty | ParameterList;
+    syntax Static_Assert_Declaration =
+    _Static_assert '(' Constant_Expression ',' string_literal ')' ';';
 
-    syntax ParameterListFollow = ',' ParameterList | empty;
-
-    syntax ParameterList = Identifier ParameterListFollow | empty;
-   
-    syntax CompoundStatement = '{' Statements '}';
-
-    syntax Statements =  empty | Statement Statements;
-
-    syntax Statement =
-    ';' |
-    "if" Condition Statement |
-    "if" Condition Statement "else" Statement |
-    "while" Condition Statement |
-    ForParen ';' ExpressionOpt ';' ExpressionOpt ')' Statement |
-    ForBegin ';' ExpressionOpt ';' ExpressionOpt ')' Statement |
-    ForBegin "in" Expression ')' Statement |
-    "break" ';' |
-    "continue" ';' |
-    "with" '(' Expression ')' Statement |
-    "return" ExpressionOpt ';' |
-    CompoundStatement |
-    VariablesOrExpression ;
-
-    syntax Condition = '(' Expression ')';
-
-    syntax ForParen =   "for" '(' ;
-
-    syntax ForBegin =   ForParen VariablesOrExpression;
-
-    syntax VariablesOrExpression =  "var" Variables |   Expression;
-
-    syntax Variables =  Variable |  Variable ',' Variables;
-
-    syntax Variable = Identifier VariableMore;
-    syntax VariableMore = '=' AssignExpr | empty;
-
-    syntax ExpressionOpt =   empty | Expression;
-
-    syntax Expression =   AssignExpr;
     
 
-    syntax AssignExpr   = AddExpr AssignExprMore;
-    syntax AssignExprMore = '=' AddExpr {PrintSet} AssignExprMore | empty;
+    //=============TypeName==========
+    syntax Type_Name =
+    Specifier_Qualifier_List Abstract_DeclaratorOpt;
 
-    syntax AddExpr   = MultiExpr AddExprMore;
+    
 
-    syntax AddExprMore = "+" MultiExpr {PrintAdd} AddExprMore |
-                         "-" MultiExpr {PrintMinus} AddExprMore |  
-                         empty;
-                
+    syntax PointerOpt =
+    Pointer | empty;
 
-  syntax MultiExpr = PrimaryExpr MultiExprMore;
-  syntax MultiExprMore =  "*" PrimaryExpr {PrintMulti} MultiExprMore |
-                          "/" PrimaryExpr {PrintDiv} MultiExprMore |
-                          empty;
+    syntax Abstract_DeclaratorOpt =
+    Abstract_Declarator  | empty;
 
-  syntax PrimaryExpr = PrimaryExpression | "(" AddExpr ")" | "-" MultiExpr;
+    syntax Abstract_Declarator =
+    Pointer |
+    PointerOpt Direct_Abstract_Declarator;
+
+    syntax Direct_Abstract_Declarator =
+    '(' Abstract_Declarator ')'  |
+    Direct_Abstract_DeclaratorOpt  | '[' Type_Qualifier_ListOpt Assignment_ExpressionOpt ']'
+    ;
 
 
-    syntax Constructor =
-    "this" '.' ConstructorCall |
-    ConstructorCall;
+    
+    syntax IdentifierOpt = identifier | empty;
 
-    syntax ConstructorCall =
-    Identifier |
-    Identifier '(' ArgumentListOpt ')' |
-    Identifier '.' ConstructorCall;
 
-    syntax MemberExpression =
-    PrimaryExpression |
-    PrimaryExpression '.' MemberExpression |
-    PrimaryExpression '[' Expression ']' |
-    PrimaryExpression '(' ArgumentListOpt ')';
 
-    syntax ArgumentListOpt =
-    empty |
-    ArgumentList;
+    syntax Struct_Or_Union =
+    struct | union;
 
-    syntax ArgumentList =   AssignExpr |
-                            AssignExpr ',' ArgumentList;
 
-    syntax PrimaryExpression =
-    '(' Expression ')' |
-    {PrintLexeme} Identifier |
-    {PrintLexeme}IntegerLiteral |
-    {PrintLexeme} FloatingPointLiteral |
-    {PrintLexeme} StringLiteral |
-    {PrintLexeme} "false" |
-    {PrintLexeme} "true" |
-    {PrintLexeme} "null" |
-    {PrintLexeme} "this";
+
+    syntax Typedef_Name = identifier;
+
+
+
+
+    syntax Assignment_Expression = empty; //TODO;
+    syntax Assignment_ExpressionOpt =
+    Assignment_Expression | empty;
+
+    
+	
+
+    syntax Initializer_List = empty; //TODO
   }
 }
+

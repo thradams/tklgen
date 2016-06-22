@@ -43,9 +43,15 @@ void CreateMainNFA(NfaState* newStart,
                    TransitionSet& symbols,
                    MapStateToInt& ends);
 
+enum OutputType
+{
+  OutputType_C,
+  OutputType_CPP,
+  OutputType_JS
+};
 
 void GenerateScanner(Grammar& grammar,
   const std::wstring& fileOutNameDfa,
-  bool bIsCpp);
+  OutputType type);
 
 ////////////////

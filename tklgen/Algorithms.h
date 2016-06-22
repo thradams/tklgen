@@ -13,6 +13,7 @@ class Item;
 class SetOfItems;
 class CanonicalSets;
 
+std::string to_utf8_string(const std::wstring& wstr);
 
 class MapSymbolToSet
 {
@@ -50,8 +51,10 @@ public:
 
     if (it == m_map.end())
     {
-      //            assert(false);
-      throw std::exception("null");
+      std::string errorMsg = " syntax ";
+      errorMsg+= to_utf8_string(pgs->GetName());
+      errorMsg += " not found.";
+      throw std::exception(errorMsg.c_str());
     }
 
     return it->second;

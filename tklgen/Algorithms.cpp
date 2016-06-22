@@ -395,15 +395,40 @@ MMap BuildMTable(const FirstSets& first,
                     std::wcout << L"<-- duplicated" << std::endl;
                     throw std::exception("multiple entries");
                 }*/
-                
-                if (M.find(MKey(production.GetLeftSymbol(), pgs, k)) != M.end())
+                auto MTableIt = M.find(MKey(production.GetLeftSymbol(), pgs, k));
+                if (MTableIt != M.end())
                 {
-                    std::wcout << L"<-- duplicated" << std::endl;
-                    throw std::exception("multiple entries");
+                  if (MTableIt->m_pNotTerminal->GetName() !=
+                    production.GetLeftSymbol()->GetName())
+                  {
+                    //if (MTableIt->)
+                    //M.insert(MKey(production.GetLeftSymbol(), pgs, k));
+                    std::string strError;
+                    strError = "Multiple entries ";
+                    strError += to_utf8_string(production.GetLeftSymbol()->GetName());
+                    strError += " -> ";
+                    strError += to_utf8_string(pgs->GetName());
+                    throw std::exception(strError.c_str());
+                  }
+                  else
+                  {
+                    //ja existe a regra igual
+                    //std::string strError;
+                    //strError = "Multiple entries ";
+                    //strError += to_utf8_string(production.GetLeftSymbol()->GetName());
+                    //strError += " -> ";
+                    //strError += to_utf8_string(pgs->GetName());
+                    //throw std::exception(strError.c_str());
+                  }
+                }
+                else
+                {
+                  //criar a regra
+                  std::wcout << std::endl;
+                  M.insert(MKey(production.GetLeftSymbol(), pgs, k));
                 }
 
-                std::wcout << std::endl;
-                M.insert(MKey(production.GetLeftSymbol(), pgs, k));
+                
                 //M[MKey(production.GetLeftSymbol(), pgs)] = k;
             }
             else if (pgs == g.epsilon())
@@ -423,15 +448,28 @@ MMap BuildMTable(const FirstSets& first,
                                    b->GetName() << L"] = " ;
                         Print(std::wcout, production);
 
-
-                        if (M.find(MKey(production.GetLeftSymbol(), b, k)) != M.end())
+                        auto MTableIt = M.find(MKey(production.GetLeftSymbol(), b, k));
+                        if (MTableIt != M.end())
                         {
+                          if (MTableIt->m_pNotTerminal->GetName() !=
+                              production.GetLeftSymbol()->GetName())
+                          {
                             std::wcout << L"<-- duplicated" << std::endl;
                             throw std::exception("multiple entries");
+                          }
+                          else
+                          {
+                            //std::wcout << L"<-- duplicated" << std::endl;
+                            //throw std::exception("multiple entries");
+                          }
+                           
                         }
-
-                        std::wcout << std::endl;
-                        M.insert(MKey(production.GetLeftSymbol(), b, k));
+                        else
+                        {
+                          std::wcout << std::endl;
+                          M.insert(MKey(production.GetLeftSymbol(), b, k));
+                        }
+                        
                         //M[MKey(production.GetLeftSymbol(), b)] = k;
                     }
                 }

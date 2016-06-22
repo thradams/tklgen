@@ -506,6 +506,24 @@ void StringToNewFile(const wchar_t* psz, const wchar_t* fileName)
     }
 }
 
+ std::string to_utf8_string(const std::wstring& wstr)
+{
+  std::string result;
+  try
+  {
+    typedef std::codecvt_utf8<wchar_t> convert_typeX;
+    std::wstring_convert<convert_typeX, wchar_t> converterX;
+    result = converterX.to_bytes(wstr);
+  }
+  catch (...)
+  {
+    assert(false);
+  }
+
+  return result;
+}
+
+
 #define SSTREAMSOURCE \
 L"#include \"sstream.h\"\n"\
 L"#include <assert.h>\n"\

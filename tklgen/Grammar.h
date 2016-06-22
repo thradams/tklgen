@@ -215,7 +215,7 @@ class Grammar : public Symbols
   std::wstring m_LanguageName;
 
 public:
-
+  bool m_bAutoToken;
   NfaState* m_pStartNfaState;
   NfaStates m_NfaStates;
   TransitionSet m_TransitionSet;
@@ -224,7 +224,8 @@ public:
   int m_TokenInterleaveIndex;
 
   Grammar()
-  {
+  {    
+    m_bAutoToken = false;
     m_TokenInterleaveIndex = -1;
     m_pStartNfaState = m_NfaStates.New();
   }

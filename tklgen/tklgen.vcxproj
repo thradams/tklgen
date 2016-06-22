@@ -86,6 +86,7 @@
     <ClInclude Include="Algorithms.h" />
     <ClInclude Include="CommonOutput.h" />
     <ClInclude Include="console.h" />
+    <ClInclude Include="LexOutputJs.h" />
     <ClInclude Include="LLOutputCpp.h" />
     <ClInclude Include="LLOutputC.h" />
     <ClInclude Include="expression.h" />
@@ -94,6 +95,7 @@
     <ClInclude Include="GrammarParser.h" />
     <ClInclude Include="GrammarSymbol.h" />
     <ClInclude Include="LexAlgorithms.h" />
+    <ClInclude Include="LLOutputJs.h" />
     <ClInclude Include="Production.h" />
     <ClInclude Include="SetOfInts.h" />
     <ClInclude Include="stdafx.h" />
@@ -108,12 +110,14 @@
     <ClCompile Include="Algorithms.cpp" />
     <ClCompile Include="CommonOutput.cpp" />
     <ClCompile Include="console.cpp" />
+    <ClCompile Include="LexOutputJs.cpp" />
     <ClCompile Include="LLOutputCpp.cpp" />
     <ClCompile Include="LLOutputC.cpp" />
     <ClCompile Include="expression.cpp" />
     <ClCompile Include="Grammar.cpp" />
     <ClCompile Include="GrammarParser.cpp" />
     <ClCompile Include="LexAlgorithms.cpp" />
+    <ClCompile Include="LLOutputJs.cpp" />
     <ClCompile Include="Production.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

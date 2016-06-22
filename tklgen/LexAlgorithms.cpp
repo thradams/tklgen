@@ -3,6 +3,7 @@
 #include "Grammar.h"
 #include "console.h"
 #include <fstream>
+#include "LexOutputJS.h"
 #include "LexOutputC.h"
 #include "LexOutputCpp.h"
 #include "CommonOutput.h"
@@ -501,9 +502,57 @@ void GenerateC(Grammar& grammar, const std::wstring& fileOutNameDfa,
 
 }
 
+
+void GenerateJs(Grammar& grammar, const std::wstring& fileOutNameDfa,
+  OutputMap& out)
+{
+  std::wstring header = fileOutNameDfa;
+  std::wstring source = fileOutNameDfa;
+  find_replace(source, L".h", L".cpp");
+
+  std::wofstream fileoutSource(source.c_str());
+
+  std::wofstream fileoutHeader(header.c_str());
+
+
+  MapIntToInt finaltokens;
+  MapIntCharToInt intCharToIntMapOut;
+
+  int interleaveIndex = grammar.m_TokenInterleaveIndex;
+
+  GenerateCodeC(fileoutSource,
+    fileOutNameDfa,
+    grammar.GetLanguageName(),
+    grammar.GetModuleName(),
+    true,
+    grammar.m_TokenNames,
+    intCharToIntMapOut,
+    finaltokens,
+    out,
+    grammar.m_TransitionSet,
+    interleaveIndex,
+    L"Tokens",
+    L"TK");
+
+  GenerateHeaderC(fileoutHeader,
+    fileOutNameDfa,
+    grammar.GetLanguageName(),
+    grammar.GetModuleName(),
+    true,
+    grammar.m_TokenNames,
+    intCharToIntMapOut,
+    finaltokens,
+    out,
+    grammar.m_TransitionSet,
+    interleaveIndex,
+    L"Tokens",
+    L"TK");
+
+}
+
 void GenerateScanner(Grammar& grammar, 
                      const std::wstring& fileOutNameDfa,
-                     bool bIsCpp)
+                     OutputType type)
 {
   ////////////////////////////
   //
@@ -525,13 +574,17 @@ void GenerateScanner(Grammar& grammar,
 
   PrintLn("Minimizing DFA end");
   
-  if (bIsCpp)
+  if (type == OutputType_CPP)
   {
     GenerateCpp(grammar, fileOutNameDfa, out);
   }
-  else
+  else if (type == OutputType_C)
   {
     GenerateC(grammar, fileOutNameDfa, out);
+  }
+  else if (type == OutputType_JS)
+  {
+    GenerateJs(grammar, fileOutNameDfa, out);
   }
 
   

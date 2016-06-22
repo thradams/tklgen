@@ -97,6 +97,12 @@
     <ClInclude Include="LLOutputC.h">
       <Filter>Source Files\Output</Filter>
     </ClInclude>
+    <ClInclude Include="LLOutputJs.h">
+      <Filter>Source Files\Output</Filter>
+    </ClInclude>
+    <ClInclude Include="LexOutputJs.h">
+      <Filter>Source Files\Output\Lex</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -140,6 +146,12 @@
     </ClCompile>
     <ClCompile Include="LLOutputC.cpp">
       <Filter>Source Files\Output</Filter>
+    </ClCompile>
+    <ClCompile Include="LLOutputJs.cpp">
+      <Filter>Source Files\Output</Filter>
+    </ClCompile>
+    <ClCompile Include="LexOutputJs.cpp">
+      <Filter>Source Files\Output\Lex</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
