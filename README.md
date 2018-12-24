@@ -1,7 +1,7 @@
 
-##TklGen
+## TklGen
 
-#Introduction
+# Introduction
 
 Tklgen is a scanner and parser generator.
 
@@ -9,7 +9,7 @@ The grammar used by tklgen is LL(1) and the generated parser is C++ top-down rec
 
 The input file is a grammar LL(1) describing productions and terminals.
 
-###Grammar syntax
+### Grammar syntax
 
 ```c
 module tklgen
@@ -83,7 +83,7 @@ A complete sample is the tklgen grammar used to describe itself:
 [TKLGEN Grammar](tklgengrammar2.md)
 
 
-###Parser components:
+### Parser components:
 
 Generated files:
 
@@ -96,14 +96,14 @@ Existing files:
  * Tokenizer: [[Tokenizertklgen2.htm|Tokenizer]]
  * StringStream + Tokenizer togeter [[StringStreamTokenizer.htm|StringStreamTokenizer]]
 
-###Calculator
+### Calculator
 
 [Expression Sample](expressionsample2.md)
 
 [JSON grammar sample](jsonsample.md)
 
 
-###References
+### References
 
 * "Compilers: Principles, Techniques, and Tools", Alfred V. Aho , Ravi Sethi , Jeffrey D. Ullman
 
