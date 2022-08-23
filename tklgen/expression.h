@@ -6,6 +6,7 @@
 #include <set>
 #include <assert.h>
 #include <memory>
+#include <string>
 
 class NfaState;
 
